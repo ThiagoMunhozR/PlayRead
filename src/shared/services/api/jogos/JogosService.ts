@@ -23,8 +23,14 @@ type TJogosComTotalCount = {
 
 const getAll = async (page = 1, filter = ''): Promise<TJogosComTotalCount | Error> => {
   try {
-    const urlRelativa = `/jogos?_page=${page}&_limit=${Environment.LIMITE_DE_LINHAS}&nome_like=${filter}`;
-
+  
+    let urlRelativa: string;
+    
+    if (page === 0) { 
+       urlRelativa = `/jogos`;
+    } else {
+       urlRelativa = `/jogos?_page=${page}&_limit=${Environment.LIMITE_DE_LINHAS}&nome_like=${filter}`;
+    }
     const { data, headers } = await Api.get(urlRelativa);
 
     if (data) {
