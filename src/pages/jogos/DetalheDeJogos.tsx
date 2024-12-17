@@ -21,7 +21,7 @@ export const DetalheDeJogos: React.FC = () => {
   const { showAlert, showConfirmation } = useMessageContext();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [jogo, setJogo] = useState<FormData | null>(null);
+  const [, setJogo] = useState<FormData | null>(null);
   const [nome, setNome] = useState('');
 
   const {
