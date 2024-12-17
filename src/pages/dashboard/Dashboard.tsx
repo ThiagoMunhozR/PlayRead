@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Card, CardContent, CardMedia, Grid, Typography } from '@mui/material';
+import { Box, Card, CardContent, Grid, LinearProgress, Typography } from '@mui/material';
 
 import { FerramentasDaListagem } from '../../shared/components';
 import { LayoutBaseDePagina } from '../../shared/layouts';
@@ -80,11 +80,25 @@ export const Dashboard = () => {
         < FerramentasDaListagem
           mostrarInputBusca
           //textoDaBusca={busca} 
-          mostrarBotaoNovo={false} 
+          mostrarBotaoNovo={false}
         />
       }
     >
       <Box width="100%" display="flex">
+        {isLoadingJogos && (
+          <Box
+            sx={{
+              width: '90%', // Faz o LinearProgress ocupar 90% da largura
+              margin: '0 auto', // Centraliza na tela
+              position: 'absolute',
+              top: '50%', // Fica na vertical centralizada
+              left: '50%', // Fica na horizontal centralizada
+              transform: 'translate(-50%, -50%)', // Ajuste para o centro exato
+            }}
+          >
+            <LinearProgress variant="indeterminate" />
+          </Box>
+        )}
         <Grid container spacing={2} margin={2}>
           {jogos.map((jogo) => (
             <Grid
