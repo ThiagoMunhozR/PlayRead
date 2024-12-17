@@ -114,7 +114,7 @@ export const Dashboard = () => {
                 {/* Imagem da capa do jogo */}
                 <Box
                   component="img"
-                  src={`/src/shared/imagens/jogos/${removerCaracteresEspeciais(
+                  src={`/imagens/jogos/${removerCaracteresEspeciais(
                     jogo.nome
                   )}.jpg`}
                   alt={jogo.nome}
