@@ -13,7 +13,7 @@ export const ListagemDeJogo: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const { debounce } = useDebounce();
     const navigate = useNavigate();
-    const { showAlert } = useMessageContext();
+    const { showAlert, showConfirmation } = useMessageContext();
 
     const [rows, setRows] = useState<IListagemJogo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -46,19 +46,23 @@ export const ListagemDeJogo: React.FC = () => {
     }, [busca, pagina]);
 
     const handleDelete = (id: number) => {
-        if (confirm('Realmente deseja apagar?')) {
-            JogosService.deleteById(id)
-                .then(result => {
-                    if (result instanceof Error) {
-                        showAlert(result.message, 'error');
-                    } else {
-                        setRows(oldRows => [
-                            ...oldRows.filter(oldRow => oldRow.id !== id),
-                        ]);
-                        showAlert('Registro apagado com sucesso!', 'success');
-                    }
-                });
-        }
+        showConfirmation(
+            'Realmente deseja apagar?', // Mensagem de confirmação
+            () => { // Função que será executada se o usuário clicar em "Sim"
+                JogosService.deleteById(id)
+                    .then(result => {
+                        if (result instanceof Error) {
+                            showAlert(result.message, 'error');
+                        } else {
+                            showAlert('Registro apagado com sucesso!', 'success');
+                            navigate('/jogos');
+                        }
+                    });
+            },
+            () => { // Função que será executada se o usuário clicar em "Não"
+                showAlert('Ação cancelada pelo usuário.', 'info');
+            }
+        );
     };
 
     return (
@@ -94,7 +98,7 @@ export const ListagemDeJogo: React.FC = () => {
                                     <IconButton size="small" onClick={() => navigate(`/jogos/detalhe/${row.id}`)}>
                                         <Icon>edit</Icon>
                                     </IconButton>
-                                    </TableCell>
+                                </TableCell>
                                 <TableCell>{row.data}</TableCell>
                                 <TableCell>{row.nome}</TableCell>
                                 <TableCell>{row.dataCompleto}</TableCell>

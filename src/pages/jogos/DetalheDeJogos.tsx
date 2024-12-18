@@ -8,6 +8,7 @@ import { LayoutBaseDePagina } from '../../shared/layouts';
 import { JogosService } from '../../shared/services/api/jogos/JogosService';
 import { useMessageContext } from '../../shared/contexts';
 
+
 type FormData = {
   id?: number;
   data: string;
@@ -71,23 +72,36 @@ export const DetalheDeJogos: React.FC = () => {
             return;
           }
 
-          // Determinar o próximo ID
-          const nextId = jogos.totalCount + 1;
+          JogosService.getUltimoRegistroJogos('jogos')
+            .then((lastId) => {
+              if (lastId instanceof Error) {
+                showAlert(lastId.message, 'error');
+                return;
+              }
 
-          const newJogo = {
-            id: nextId,
-            ...formData,
-          };
+              const nextId = lastId + 1;
 
-          // Adicionar novo jogo
-          JogosService.create(newJogo).then((result) => {
-            if (result instanceof Error) {
-              showAlert(result.message, 'error');
-            } else {
-              showAlert('Jogo salvo com sucesso!', 'success');
-              navigate(`/jogos/detalhe/${result}`);
-            }
-          });
+              const newJogo = {
+                id: nextId, // Valor do próximo ID gerado
+                data: formData.data, // Data do jogo
+                nome: formData.nome, // Nome do jogo
+                dataCompleto: formData.dataCompleto, // Data Completa (opcional)
+              };
+
+              // Adicionar novo jogo
+              JogosService.create(newJogo.id, newJogo.data, newJogo.nome, newJogo.dataCompleto).then((result) => {
+                if (result instanceof Error) {
+                  showAlert(result.message, 'error');
+                } else {
+                  showAlert('Jogo salvo com sucesso!', 'success');
+                  navigate(`/jogos/detalhe/${result}`);
+                }
+              });
+            })
+            .catch((error) => {
+              console.error('Erro ao salvar:', error);
+              showAlert('Erro ao salvar o jogo.', 'error');
+            });
         });
       } else {
         // Atualizar jogo existente

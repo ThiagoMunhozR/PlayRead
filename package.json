@@ -17,6 +17,7 @@
     "@mui/icons-material": "^5.16.11",
     "@mui/material": "^5.16.11",
     "@mui/x-date-pickers": "^7.23.2",
+    "@supabase/supabase-js": "^2.47.9",
     "@unform/core": "^2.1.6",
     "@unform/web": "^2.1.6",
     "axios": "^1.7.9",
