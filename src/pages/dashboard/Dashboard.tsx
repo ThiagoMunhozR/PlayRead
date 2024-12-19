@@ -84,7 +84,7 @@ export const Dashboard = () => {
   // Função para verificar e buscar a capa do jogo
   const verificarCapaDoJogo = async (nomeJogo: string) => {
     const imagePath = `/imagens/jogos/${removerCaracteresEspeciais(nomeJogo)}.jpg`;
-    const defaultImagePath = '/path/to/default/image.jpg';
+    const defaultImagePath = '/imagens/SemImagem.jpg';
 
     // Verificar se a imagem já existe no caminho local
     const image = new Image();
