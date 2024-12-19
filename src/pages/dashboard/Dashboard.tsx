@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Box, Card, CardContent, Grid, LinearProgress, Typography } from '@mui/material';
 
 import { FerramentasDaListagem } from '../../shared/components';
@@ -48,21 +48,27 @@ export const Dashboard = () => {
   const [isLoadingJogos, setIsLoadingJogos] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [jogos, setJogos] = useState<any[]>([]);
+  const [imagensJogos, setImagensJogos] = useState<{ [key: string]: string }>({}); // Tipando o estado
   const { user } = useAuthContext();
+  const consultaRealizada = useRef(false);
 
   useEffect(() => {
-    // Lógica para carregar os jogos
-    setIsLoadingJogos(true);
-    JogosService.getAll(user?.CodigoUsuario,0)
-      .then((result) => {
-        setIsLoadingJogos(false);
-        if (result instanceof Error) {
-          alert(result.message);
-        } else {
-          setJogos(result.data);
-        }
-      });
-  }, []);
+    if (!consultaRealizada.current && user?.CodigoUsuario) {
+      // Lógica para carregar os jogos
+      setIsLoadingJogos(true);
+      console.log('Realizado consulta');
+      JogosService.getAll(user?.CodigoUsuario, 0)
+        .then((result) => {
+          setIsLoadingJogos(false);
+          if (result instanceof Error) {
+            alert(result.message);
+          } else {
+            setJogos(result.data);
+          }
+        });
+        consultaRealizada.current = true;
+    }
+  }, [user?.CodigoUsuario]);
 
   // Detectar tamanho da tela e ajustar isMobile
   useEffect(() => {
@@ -74,6 +80,52 @@ export const Dashboard = () => {
     // Cleanup para remover o event listener
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Função para verificar e buscar a capa do jogo
+  const verificarCapaDoJogo = async (nomeJogo: string) => {
+    const imagePath = `/imagens/jogos/${removerCaracteresEspeciais(nomeJogo)}.jpg`;
+    const defaultImagePath = '/path/to/default/image.jpg';
+
+    // Verificar se a imagem já existe no caminho local
+    const image = new Image();
+    image.src = imagePath;
+
+    // Usar uma Promise para garantir o carregamento da imagem
+    return new Promise<string>((resolve) => {
+      image.onload = () => {
+        resolve(imagePath);
+      };
+
+      image.onerror = async () => {
+        // Caso não tenha encontrado a imagem localmente, buscar no cachê ou API
+        try {
+          const imageUrl = await JogosService.buscarCapaDoJogo(nomeJogo);
+          resolve(imageUrl); // Aqui você resolve com a URL da imagem
+        } catch (error) {
+          console.error('Erro ao buscar a capa do jogo:', error);
+          resolve(defaultImagePath); // Rejeita com uma string vazia, não um objeto Error
+        }
+      };
+    });
+  };
+
+
+  // Carregar as imagens dos jogos
+  useEffect(() => {
+    const carregarImagens = async () => {
+      const imagens: { [key: string]: string } = {}; // Tipando a variável temporária
+      for (const jogo of jogos) {
+        const capa = await verificarCapaDoJogo(jogo.nome);
+
+        imagens[jogo.nome] = capa;
+      }
+      setImagensJogos(imagens);
+    };
+
+    if (jogos.length > 0) {
+      carregarImagens(); // Carrega as imagens apenas quando os jogos são carregados
+    }
+  }, [jogos]); // Dependência para executar sempre que a lista de jogos mudar
 
   return (
     <LayoutBaseDePagina
@@ -116,9 +168,7 @@ export const Dashboard = () => {
                 {/* Imagem da capa do jogo */}
                 <Box
                   component="img"
-                  src={`/imagens/jogos/${removerCaracteresEspeciais(
-                    jogo.nome
-                  )}.jpg`}
+                  src={imagensJogos[jogo.nome] || '/path/to/default/image.jpg'} // Exibe a imagem ou uma imagem padrão
                   alt={jogo.nome}
                   sx={getImageStyles(isMobile)}
                 />
