@@ -4,6 +4,7 @@ import { Box, Card, CardContent, Grid, LinearProgress, Typography } from '@mui/m
 import { FerramentasDaListagem } from '../../shared/components';
 import { LayoutBaseDePagina } from '../../shared/layouts';
 import { JogosService } from '../../shared/services/api/jogos/JogosService';
+import { useAuthContext } from '../../shared/contexts';
 
 // Função para remover caracteres especiais do nome do arquivo
 function removerCaracteresEspeciais(nomeArquivo: string) {
@@ -47,11 +48,12 @@ export const Dashboard = () => {
   const [isLoadingJogos, setIsLoadingJogos] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [jogos, setJogos] = useState<any[]>([]);
+  const { user } = useAuthContext();
 
   useEffect(() => {
     // Lógica para carregar os jogos
     setIsLoadingJogos(true);
-    JogosService.getAll(0)
+    JogosService.getAll(user?.CodigoUsuario,0)
       .then((result) => {
         setIsLoadingJogos(false);
         if (result instanceof Error) {

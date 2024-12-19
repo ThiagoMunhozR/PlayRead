@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { DarkTheme, LightTheme } from "../themes";
 import { Box, ThemeProvider } from '@mui/material';
 
@@ -17,7 +17,13 @@ interface IAppThemeProviderProps{
     children: React.ReactNode
 }
 export const AppThemeProvider: React.FC<IAppThemeProviderProps> = ({children}) => {
-    const [themeName, setThemeName] = useState<'light' | 'dark'>('light');
+    const savedTheme = localStorage.getItem('themeName') as 'light' | 'dark' | null;
+    const [themeName, setThemeName] = useState<'light' | 'dark'>(savedTheme || 'light');
+    
+    useEffect(() => {
+        // Salva a preferência de tema no localStorage sempre que o tema for alterado
+        localStorage.setItem('themeName', themeName);
+    }, [themeName]);
     
     const toggleTheme = useCallback(() => {
         setThemeName(oldThemeName => oldThemeName === 'light' ? 'dark' : 'light')

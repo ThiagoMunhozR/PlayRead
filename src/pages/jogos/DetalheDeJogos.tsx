@@ -6,7 +6,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { FerramentasDeDetalhe } from '../../shared/components';
 import { LayoutBaseDePagina } from '../../shared/layouts';
 import { JogosService } from '../../shared/services/api/jogos/JogosService';
-import { useMessageContext } from '../../shared/contexts';
+import { useAuthContext, useMessageContext } from '../../shared/contexts';
 
 
 type FormData = {
@@ -24,6 +24,7 @@ export const DetalheDeJogos: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [, setJogo] = useState<FormData | null>(null);
   const [nome, setNome] = useState('');
+  const { user } = useAuthContext();
 
   const {
     handleSubmit,
@@ -66,7 +67,7 @@ export const DetalheDeJogos: React.FC = () => {
     handleSubmit((formData: FormData) => {
       setIsLoading(true);
       if (id === 'novo') {
-        JogosService.getAll().then((jogos) => {
+        JogosService.getAll(user?.CodigoUsuario).then((jogos) => {
           if (jogos instanceof Error) {
             showAlert(jogos.message, 'error');
             return;
@@ -89,7 +90,7 @@ export const DetalheDeJogos: React.FC = () => {
               };
 
               // Adicionar novo jogo
-              JogosService.create(newJogo.id, newJogo.data, newJogo.nome, newJogo.dataCompleto).then((result) => {
+              JogosService.create(newJogo.id, newJogo.data, newJogo.nome, newJogo.dataCompleto, user?.CodigoUsuario).then((result) => {
                 if (result instanceof Error) {
                   showAlert(result.message, 'error');
                 } else {
@@ -107,6 +108,7 @@ export const DetalheDeJogos: React.FC = () => {
         // Atualizar jogo existente
         const payload = {
           id: Number(id), // Garantir que id é um número válido
+          CodigoUsuario: user?.CodigoUsuario,
           ...formData,
         };
 

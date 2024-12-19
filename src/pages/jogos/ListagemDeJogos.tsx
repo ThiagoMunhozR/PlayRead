@@ -3,7 +3,7 @@ import { Icon, IconButton, LinearProgress, Pagination, Paper, Table, TableBody, 
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { IListagemJogo, JogosService } from '../../shared/services/api/jogos/JogosService';
 import { FerramentasDaListagem } from '../../shared/components';
-import { useMessageContext } from '../../shared/contexts';
+import { useAuthContext, useMessageContext } from '../../shared/contexts';
 import { LayoutBaseDePagina } from '../../shared/layouts';
 import { useDebounce } from '../../shared/hooks';
 import { Environment } from '../../shared/environment';
@@ -18,6 +18,7 @@ export const ListagemDeJogo: React.FC = () => {
     const [rows, setRows] = useState<IListagemJogo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [totalCount, setTotalCount] = useState(0);
+    const { user } = useAuthContext();
 
     const busca = useMemo(() => {
         return searchParams.get('busca') || '';
@@ -31,7 +32,7 @@ export const ListagemDeJogo: React.FC = () => {
         setIsLoading(true);
 
         debounce(() => {
-            JogosService.getAll(pagina, busca)
+            JogosService.getAll(user?.CodigoUsuario,pagina, busca)
                 .then((result) => {
                     setIsLoading(false);
 

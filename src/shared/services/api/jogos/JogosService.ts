@@ -15,6 +15,7 @@ export interface IDetalheJogo {
   data: string;
   nome: string;
   dataCompleto: string;
+  CodigoUsuario: number | undefined;
 }
 
 type TJogosComTotalCount = {
@@ -22,13 +23,14 @@ type TJogosComTotalCount = {
   totalCount: number;
 }
 
-const getAll = async (page = 1, filter = ''): Promise<TJogosComTotalCount | Error> => {
+const getAll = async (codigousuario: number | undefined, page = 1, filter = ''): Promise<TJogosComTotalCount | Error> => {
   try {
-    // Fazendo a consulta ao banco sem a paginação
+    
     let query = supabase
       .from('jogos') // Nome da tabela
       .select('*', { count: 'exact' })
-      .ilike('nome', `%${filter}%`);  // Filtro de nome
+      .ilike('nome', `%${filter}%`)
+      .eq('CodigoUsuario', codigousuario)  // Filtro de nome
 
     const { data, error, count } = await query;
 
@@ -86,7 +88,8 @@ const create = async (
   id: number,
   data: string,
   nome: string,
-  dataCompleto: string
+  dataCompleto: string,
+  CodigoUsuario: number | undefined,
 ): Promise<number | Error> => {
   try {
     // Criando o objeto com os parâmetros recebidos
@@ -95,6 +98,7 @@ const create = async (
       data,
       nome,
       dataCompleto,
+      CodigoUsuario
     };
 
     console.log("Dados antes de criar o jogo:", dados);
