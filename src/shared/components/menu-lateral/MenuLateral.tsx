@@ -1,34 +1,6 @@
-import { Avatar, Divider, Box, Drawer, Icon, List, ListItemButton, ListItemIcon, ListItemText, useTheme, useMediaQuery, Typography } from '@mui/material';
-import { useMatch, useNavigate, useResolvedPath } from 'react-router-dom';
+import { Box, Drawer, Divider, List, useTheme, useMediaQuery, Typography, Avatar, ListItemButton, ListItemIcon, Icon, ListItemText } from '@mui/material';
 import { useAppThemeContext, useAuthContext, useDrawerContext } from '../../contexts';
-
-interface IListItemLinkProps {
-  to: string;
-  icon: string;
-  label: string;
-  onClick: (() => void) | undefined;
-}
-
-const ListItemLink: React.FC<IListItemLinkProps> = ({ to, icon, label, onClick }) => {
-  const navigate = useNavigate();
-
-  const resolvedPath = useResolvedPath(to);
-  const match = useMatch({ path: resolvedPath.pathname, end: false });
-
-  const handleClick = () => {
-    navigate(to);
-    onClick?.();
-  };
-
-  return (
-    <ListItemButton selected={!!match} onClick={handleClick}>
-      <ListItemIcon>
-        <Icon>{icon}</Icon>
-      </ListItemIcon>
-      <ListItemText primary={label} />
-    </ListItemButton>
-  );
-};
+import { SubMenu } from './SubMenu';
 
 interface IMenuLateralProps {
   children: React.ReactNode;
@@ -37,15 +9,19 @@ interface IMenuLateralProps {
 export const MenuLateral: React.FC<IMenuLateralProps> = ({ children }) => {
   const theme = useTheme();
   const mdDown = useMediaQuery(theme.breakpoints.down('md'));
-  const { isDrawerOpen, drawerOptions, toggleDrawerOpen } = useDrawerContext();
+  const { isDrawerOpen, toggleDrawerOpen, drawerOptions } = useDrawerContext();
   const { toggleTheme } = useAppThemeContext();
   const { logout, user } = useAuthContext();
 
   return (
     <>
-      <Drawer open={isDrawerOpen} variant={mdDown ? 'temporary' : 'permanent'} onClose={toggleDrawerOpen}>
+      <Drawer
+        open={isDrawerOpen}
+        variant={mdDown ? 'temporary' : 'permanent'}
+        onClose={toggleDrawerOpen}
+      >
         <Box width={theme.spacing(28)} height="100%" display="flex" flexDirection="column">
-          {user && (
+        {user && (
             <Box
               width="100%"
               height={theme.spacing(24)}
@@ -73,13 +49,12 @@ export const MenuLateral: React.FC<IMenuLateralProps> = ({ children }) => {
           <Divider />
           <Box flex={1}>
             <List component="nav">
-              {drawerOptions?.map(drawerOption => (
-                <ListItemLink
-                  to={drawerOption.path}
-                  key={drawerOption.path}
-                  icon={drawerOption.icon}
-                  label={drawerOption.label}
-                  onClick={mdDown ? toggleDrawerOpen : undefined}
+              {drawerOptions.map(option => (
+                <SubMenu
+                  key={option.label}
+                  title={option.label}
+                  icon={option.icon}
+                  subOptions={option.subOptions || []}
                 />
               ))}
             </List>

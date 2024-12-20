@@ -140,7 +140,7 @@ export const BibliotecaDeJogos = () => {
 
   return (
     <LayoutBaseDePagina
-      titulo="Biblioteca de jogos"
+      titulo="Biblioteca de Jogos"
       barraDeFerramentas={
         <FerramentasDaListagem
           mostrarInputBusca
