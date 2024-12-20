@@ -181,7 +181,7 @@ export const BibliotecaDeJogos = () => {
                 <Box
                   component="img"
                   src={imagensJogos[jogo.nome] || '/path/to/default/image.jpg'} // Exibe a imagem ou uma imagem padrão
-                  alt={jogo.nome}
+                  alt=''
                   sx={getImageStyles(isMobile)}
                 />
 
