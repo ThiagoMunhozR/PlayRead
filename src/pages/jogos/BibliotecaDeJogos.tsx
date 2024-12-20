@@ -112,10 +112,10 @@ export const BibliotecaDeJogos = () => {
         // Caso não tenha encontrado a imagem localmente, buscar no cachê ou API
         try {
           const imageUrl = await JogosService.buscarCapaDoJogo(nomeJogo);
-          resolve(imageUrl); // Aqui você resolve com a URL da imagem
+          resolve(imageUrl); 
         } catch (error) {
           console.error('Erro ao buscar a capa do jogo:', error);
-          resolve(defaultImagePath); // Rejeita com uma string vazia, não um objeto Error
+          resolve(defaultImagePath); 
         }
       };
     });
@@ -180,7 +180,7 @@ export const BibliotecaDeJogos = () => {
                 {/* Imagem da capa do jogo */}
                 <Box
                   component="img"
-                  src={imagensJogos[jogo.nome] || '/path/to/default/image.jpg'} // Exibe a imagem ou uma imagem padrão
+                  src={imagensJogos[jogo.nome] || '/imagens/loading.gif'}
                   alt=''
                   sx={getImageStyles(isMobile)}
                 />
