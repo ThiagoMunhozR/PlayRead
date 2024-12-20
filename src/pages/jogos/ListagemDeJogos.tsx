@@ -68,7 +68,7 @@ export const ListagemDeJogo: React.FC = () => {
 
     return (
         <LayoutBaseDePagina
-            titulo='Listagem de jogos'
+            titulo='Gerenciar jogos'
             barraDeFerramentas={
                 <FerramentasDaListagem
                     mostrarInputBusca

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useDrawerContext } from "../shared/contexts";
 import {
-  Dashboard,
+  BibliotecaDeJogos,
   DetalheDeJogos,
   ListagemDeJogo,
 } from '../pages';
@@ -13,23 +13,23 @@ export const AppRoutes = () => {
   useEffect(() => {
     setDrawerOptions([
       {
-        icon: 'home',
-        path: '/pagina-inicial',
-        label: 'Página inicial',
+        icon: 'sports_esports',
+        path: '/biblioteca-jogos',
+        label: 'Biblioteca',
       },
       {
-        icon: 'sports_esports',
+        icon: 'settings',
         path: '/jogos',
-        label: 'Jogos',
+        label: 'Gerenciar',
       },
     ]);
   }, []);
 
   return (
     <Routes>
-      <Route path="/pagina-inicial" element={<Dashboard />} />
+      <Route path="/biblioteca-jogos" element={<BibliotecaDeJogos />} />
 
-      <Route path="*" element={<Navigate to="/pagina-inicial" />} />
+      <Route path="*" element={<Navigate to="/biblioteca-jogos" />} />
 
       <Route path="/jogos" element={<ListagemDeJogo />} />
       <Route path="/jogos/detalhe/:id" element={<DetalheDeJogos />} />

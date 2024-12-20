@@ -1,16 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
-import { Box, Card, CardContent, Grid, LinearProgress, Typography } from '@mui/material';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Box, Card, CardContent, Grid, LinearProgress, Pagination, Typography } from '@mui/material';
+import { useSearchParams } from 'react-router-dom';
 
+import { Environment } from '../../shared/environment';
 import { FerramentasDaListagem } from '../../shared/components';
 import { LayoutBaseDePagina } from '../../shared/layouts';
-import { JogosService } from '../../shared/services/api/jogos/JogosService';
 import { useAuthContext } from '../../shared/contexts';
+import { JogosService } from '../../shared/services/api/jogos/JogosService';
 
 // Função para remover caracteres especiais do nome do arquivo
 function removerCaracteresEspeciais(nomeArquivo: string) {
   return nomeArquivo
     .replace(/:/g, '') // Remove os dois pontos
-    .replace(/[\/\*\?\"<>\|]/g, '') // Remove outros caracteres inválidos
+    .replace(/[\/\*\?\"<>\|]/g, ''); // Remove outros caracteres inválidos
 }
 
 // Função para estilos dinâmicos dos cards
@@ -44,31 +46,41 @@ const getTextStyles = (isMobile: boolean) => ({
   },
 });
 
-export const Dashboard = () => {
+export const BibliotecaDeJogos = () => {
   const [isLoadingJogos, setIsLoadingJogos] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [jogos, setJogos] = useState<any[]>([]);
   const [imagensJogos, setImagensJogos] = useState<{ [key: string]: string }>({}); // Tipando o estado
   const { user } = useAuthContext();
-  const consultaRealizada = useRef(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const consultaRealizada = useRef(true);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pagina = useMemo(() => Number(searchParams.get('pagina') || '1'), [searchParams]);
+  const busca = useMemo(() => { return searchParams.get('busca') || ''; }, [searchParams]);
+
+  useEffect(() => {
+    consultaRealizada.current = false;
+  }, [pagina, busca]);
 
   useEffect(() => {
     if (!consultaRealizada.current && user?.CodigoUsuario) {
       // Lógica para carregar os jogos
       setIsLoadingJogos(true);
       console.log('Realizado consulta');
-      JogosService.getAll(user?.CodigoUsuario, 0)
+      JogosService.getAll(user?.CodigoUsuario, pagina, busca)
         .then((result) => {
           setIsLoadingJogos(false);
           if (result instanceof Error) {
             alert(result.message);
           } else {
+            setTotalCount(result.totalCount);
             setJogos(result.data);
           }
         });
-        consultaRealizada.current = true;
+      consultaRealizada.current = true;
     }
-  }, [user?.CodigoUsuario]);
+  }, [user?.CodigoUsuario, pagina, busca]);
 
   // Detectar tamanho da tela e ajustar isMobile
   useEffect(() => {
@@ -109,7 +121,6 @@ export const Dashboard = () => {
     });
   };
 
-
   // Carregar as imagens dos jogos
   useEffect(() => {
     const carregarImagens = async () => {
@@ -129,16 +140,17 @@ export const Dashboard = () => {
 
   return (
     <LayoutBaseDePagina
-      titulo="Página inicial"
+      titulo="Biblioteca de jogos"
       barraDeFerramentas={
-        < FerramentasDaListagem
+        <FerramentasDaListagem
           mostrarInputBusca
-          //textoDaBusca={busca} 
+          textoDaBusca={busca}
           mostrarBotaoNovo={false}
+          aoMudarTextoDeBusca={(texto) => setSearchParams({ busca: texto, pagina: '1' }, { replace: true })}
         />
       }
     >
-      <Box width="100%" display="flex">
+      <Box width="100%" display="flex" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         {isLoadingJogos && (
           <Box
             sx={{
@@ -153,7 +165,7 @@ export const Dashboard = () => {
             <LinearProgress variant="indeterminate" />
           </Box>
         )}
-        <Grid container spacing={2} margin={2}>
+        <Grid container spacing={2} margin={0.5}>
           {jogos.map((jogo) => (
             <Grid
               item
@@ -199,12 +211,28 @@ export const Dashboard = () => {
                       </Typography>
                     )}
                   </Typography>
-
                 </CardContent>
               </Card>
             </Grid>
           ))}
         </Grid>
+        {(totalCount > 0 && totalCount > Environment.LIMITE_DE_LINHAS) && (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginTop: 2, // Espaçamento acima da paginação
+              marginBottom: 2, // Espaçamento abaixo da paginação
+            }}
+          >
+            <Pagination
+              page={pagina}
+              count={Math.ceil(totalCount / Environment.LIMITE_DE_LINHAS)}
+              onChange={(_, newPage) => setSearchParams({ busca, pagina: newPage.toString() }, { replace: true })}
+            />
+          </Box>
+        )}
       </Box>
     </LayoutBaseDePagina>
   );
