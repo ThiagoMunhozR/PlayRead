@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ListItemButton,
   ListItemIcon,
@@ -7,6 +7,7 @@ import {
   Collapse,
   List,
 } from '@mui/material';
+import { useLocation } from 'react-router-dom';
 
 import { ListItemLink } from '../menu-lateral/ListItemLink';
 
@@ -17,7 +18,15 @@ interface ISubMenuProps {
 }
 
 export const SubMenu: React.FC<ISubMenuProps> = ({ title, icon, subOptions }) => {
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const isCurrentPathInSubOptions = subOptions.some(
+      (subOption) => subOption.path === location.pathname
+    );
+    setIsOpen(isCurrentPathInSubOptions);
+  }, [location.pathname, subOptions]);
 
   const toggleOpen = () => {
     setIsOpen(prevState => !prevState);
@@ -42,8 +51,7 @@ export const SubMenu: React.FC<ISubMenuProps> = ({ title, icon, subOptions }) =>
               label={subOption.label}             
               style={{
                 paddingLeft: '32px', // Identação para subitem
-                fontSize: '0.875rem', // Menor tamanho de fonte
-                //height: '36px', // Altura reduzida
+                fontSize: '0.875rem', // Menor tamanho de fonte            
               }}
             />
           ))}

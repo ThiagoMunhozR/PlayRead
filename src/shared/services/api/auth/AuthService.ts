@@ -39,8 +39,7 @@ const auth = async (email: string, password: string): Promise<IAuth | Error> => 
             .select('CodigoUsuario, Gamertag, FotoURL, Nome, Email')
             .eq('Email', email) // Condição para buscar o usuário correto
             .maybeSingle(); // Espera que haja um único registro com esse email
-
-        console.log(email)
+  
         if (fetchError) {
             throw new Error(`Erro ao buscar dados do usuário: ${fetchError.message}`);
         }

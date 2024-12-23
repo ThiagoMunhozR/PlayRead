@@ -1,6 +1,8 @@
 import { useNavigate, useMatch, useResolvedPath } from 'react-router-dom';
 import { ListItemButton, ListItemIcon, ListItemText, Icon } from '@mui/material';
 
+import { useDrawerContext } from '../../contexts';
+
 interface IListItemLinkProps {
   to: string;
   icon: string;
@@ -13,10 +15,12 @@ export const ListItemLink: React.FC<IListItemLinkProps> = ({ to, icon, label, st
   const navigate = useNavigate();
   const resolvedPath = useResolvedPath(to);
   const match = useMatch({ path: resolvedPath.pathname, end: false });
+  const { toggleDrawerOpen } = useDrawerContext();
 
   const handleClick = () => {
     navigate(to);
     onClick?.();
+    toggleDrawerOpen();
   };
 
   return (

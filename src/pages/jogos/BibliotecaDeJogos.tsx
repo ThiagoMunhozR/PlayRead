@@ -17,7 +17,7 @@ function removerCaracteresEspeciais(nomeArquivo: string) {
 
 // Função para estilos dinâmicos dos cards
 const getCardStyles = (isMobile: boolean) => ({
-  height: isMobile ? 300 : 455, // Altura menor para celulares
+  height: isMobile ? 320 : 455, // Altura menor para celulares
   width: isMobile ? '90%' : '100%',
   display: 'flex',
   flexDirection: 'column',
@@ -30,7 +30,7 @@ const getImageStyles = (isMobile: boolean) => ({
   width: '100%', // A largura será 100% do card
   height: '100%', // A altura será 100% do card
   objectFit: 'cover', // A imagem preencherá o espaço do contêiner sem distorção
-  maxHeight: isMobile ? 250 : 350, // Limita a altura máxima para imagens grandes
+  maxHeight: isMobile ? 240 : 350, // Limita a altura máxima para imagens grandes
   borderRadius: '4px 4px 0 0', // Arredondar os cantos superiores
 });
 
@@ -165,7 +165,7 @@ export const BibliotecaDeJogos = () => {
             <LinearProgress variant="indeterminate" />
           </Box>
         )}
-        <Grid container spacing={2} margin={0.5}>
+        <Grid container spacing={isMobile ? 1 : 2} margin={0}>
           {jogos.map((jogo) => (
             <Grid
               item

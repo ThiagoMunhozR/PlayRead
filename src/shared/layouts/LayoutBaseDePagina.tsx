@@ -27,7 +27,6 @@ export const LayoutBaseDePagina: React.FC<ILayoutBaseDePaginaProps> = ({ childre
 
         <Typography
           overflow="hidden"
-          whiteSpace="nowrap"
           textOverflow="ellipses"
           variant={smDown ? 'h5' : mdDown ? 'h4' : 'h3'}
         >

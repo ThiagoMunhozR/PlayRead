@@ -101,8 +101,6 @@ const create = async (
       CodigoUsuario
     };
 
-    console.log("Dados antes de criar o jogo:", dados);
-
     // Inserir no banco de dados
     const { error } = await supabase
       .from('jogos') // Nome da tabela

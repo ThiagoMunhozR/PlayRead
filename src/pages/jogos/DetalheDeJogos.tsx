@@ -24,6 +24,7 @@ export const DetalheDeJogos: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [, setJogo] = useState<FormData | null>(null);
   const [nome, setNome] = useState('');
+  const [ClicouEmFechar, setClicouEmFechar] = useState(false);
   const { user } = useAuthContext();
 
   const {
@@ -94,8 +95,13 @@ export const DetalheDeJogos: React.FC = () => {
                 if (result instanceof Error) {
                   showAlert(result.message, 'error');
                 } else {
-                  showAlert('Jogo salvo com sucesso!', 'success');
-                  navigate(`/jogos/detalhe/${result}`);
+                  showAlert('Jogo salvo com sucesso!', 'success');             
+                  if (ClicouEmFechar) {                   
+                    navigate('/jogos');
+                    setClicouEmFechar(false);                    
+                  } else {
+                    navigate(`/jogos/detalhe/${result}`);                  
+                  }                
                 }
               });
             })
@@ -115,8 +121,12 @@ export const DetalheDeJogos: React.FC = () => {
         JogosService.updateById(Number(id), payload).then((result) => {
           if (result instanceof Error) {
             showAlert(result.message, 'error');
-          } else {
             showAlert('Jogo atualizado com sucesso!', 'success');
+          } else {
+            if (ClicouEmFechar) {
+              navigate('/jogos');
+              setClicouEmFechar(false);
+            }
           }
         });
       }
@@ -124,11 +134,18 @@ export const DetalheDeJogos: React.FC = () => {
     })();
   };
 
+  // Ação de Salvar e Fechar
   const handleSaveClose = () => {
-    handleSave();
-    navigate('/jogos');
+    setClicouEmFechar(true);
   };
 
+  useEffect(() => {
+    if (ClicouEmFechar) {
+      handleSave();
+    }
+  }, [ClicouEmFechar]);
+
+  // Ação de deletar
   const handleDelete = (id: number) => {
     showConfirmation(
       'Realmente deseja apagar?', // Mensagem de confirmação
@@ -143,13 +160,9 @@ export const DetalheDeJogos: React.FC = () => {
             }
           });
       },
-      () => { // Função que será executada se o usuário clicar em "Não"
-        showAlert('Ação cancelada pelo usuário.', 'info');
-      }
+      () => {} // Função que será executada se o usuário clicar em "Não"
     );
   };
-
-
 
   return (
     <LayoutBaseDePagina

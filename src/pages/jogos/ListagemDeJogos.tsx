@@ -28,21 +28,23 @@ export const ListagemDeJogo: React.FC = () => {
         return Number(searchParams.get('pagina') || '1');
     }, [searchParams]);
 
+    const CarregarJogos = () => {
+        JogosService.getAll(user?.CodigoUsuario, pagina, busca)
+            .then(result => {
+                if (result instanceof Error) {
+                    showAlert(result.message, 'error');
+                } else {
+                    setTotalCount(result.totalCount);
+                    setRows(result.data);
+                }
+            });
+    };
+
     useEffect(() => {
         setIsLoading(true);
 
         debounce(() => {
-            JogosService.getAll(user?.CodigoUsuario,pagina, busca)
-                .then((result) => {
-                    setIsLoading(false);
-
-                    if (result instanceof Error) {
-                        showAlert(result.message, 'error');
-                    } else {
-                        setTotalCount(result.totalCount);
-                        setRows(result.data);
-                    }
-                });
+            CarregarJogos();
         });
     }, [busca, pagina]);
 
@@ -56,13 +58,11 @@ export const ListagemDeJogo: React.FC = () => {
                             showAlert(result.message, 'error');
                         } else {
                             showAlert('Registro apagado com sucesso!', 'success');
-                            navigate('/jogos');
+                            CarregarJogos();
                         }
                     });
             },
-            () => { // Função que será executada se o usuário clicar em "Não"
-                showAlert('Ação cancelada pelo usuário.', 'info');
-            }
+            () => {}
         );
     };
 
