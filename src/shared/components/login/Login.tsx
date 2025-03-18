@@ -290,17 +290,22 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            width: 400,
+            maxWidth: 600,
+            width: "100vw",
+            height: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            bgcolor: "#121212"
           }}
         >
-          <Paper sx={{ padding: 4, borderRadius: 2 }}>
-            <Typography variant="h6" align="center" marginBottom={3}>
-              Criar Conta
-            </Typography>
+          <Paper sx={{ padding: 4, borderRadius: 2, margin: 2 }}>
+            <Typography variant="h5" align="center" marginBottom={3}>Criar Conta</Typography>
 
             <Typography variant="subtitle1" fontWeight="bold">Informações de login</Typography>
             <TextField
               fullWidth
+              size="small"
               label="Email"
               value={registerData.email}
               error={!!registerErrors.email}
@@ -310,6 +315,7 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
             />
             <TextField
               fullWidth
+              size="small"
               label="Senha"
               type="password"
               value={registerData.password}
@@ -320,6 +326,7 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
             />
             <TextField
               fullWidth
+              size="small"
               label="Confirmar Senha"
               type="password"
               value={registerData.confirmPassword}
@@ -328,9 +335,10 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
               onChange={(e) => handleFieldChange('confirmPassword', e.target.value)}
               margin="normal"
             />
-            <Typography variant="subtitle1" fontWeight="bold">Informações Pessoais</Typography>
+            <Typography variant="subtitle1" fontWeight="bold" marginTop={2}>Informações Pessoais</Typography>
             <TextField
               fullWidth
+              size="small"
               label="Nome"
               value={registerData.name}
               error={!!registerErrors.name}
@@ -340,6 +348,7 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
             />
             <TextField
               fullWidth
+              size="small"
               label="Gamertag"
               value={registerData.gamertag}
               error={!!registerErrors.gamertag}
