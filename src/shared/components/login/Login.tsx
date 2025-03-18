@@ -1,10 +1,7 @@
 import { useState } from 'react';
-import { Box, Button, Card, CardActions, CardContent, CircularProgress, TextField, Typography, Modal, Paper } from '@mui/material';
+import { Box, Button, Card, CardActions, CardContent, CircularProgress, TextField, Typography } from '@mui/material';
 import { useAuthContext } from '../../contexts';
-import { createClient } from '@supabase/supabase-js';
-import { Environment } from '../../environment';
-
-const supabase = createClient(Environment.SUPABASE_URL, Environment.SUPABASE_KEY);
+import { ModalCriarLogin } from './components/ModalCriarLogin';
 
 interface ILoginProps {
   children: React.ReactNode;
@@ -53,103 +50,20 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
     if (!password) {
       setPasswordError('A senha é obrigatória');
       valid = false;
-    } else if (password.length < 5) {
-      setPasswordError('A senha deve ter pelo menos 5 caracteres');
+    } else if (password.length < 6) {
+      setPasswordError('A senha deve ter pelo menos 6 caracteres');
       valid = false;
     }
 
     if (valid) {
       login(email, password)
         .then(() => setIsLoading(false))
-        .catch((error) => {
+        .catch(() => {
           setIsLoading(false);
-          setEmailError('Erro de autenticação: ' + error.message);
+          setEmailError('Não foi possível fazer login, revise o email');
+          setPasswordError('Não foi possível fazer login, revise a senha');
         });
     } else {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRegisterSubmit = async () => {
-    setIsLoading(true);
-
-    // Reset register errors
-    setRegisterErrors({
-      email: '',
-      password: '',
-      confirmPassword: '',
-      name: '',
-      gamertag: '',
-    });
-
-    let valid = true;
-    const errors = { ...registerErrors };
-
-    // Validate email
-    if (!registerData.email) {
-      errors.email = 'O e-mail é obrigatório';
-      valid = false;
-    } else if (!/\S+@\S+\.\S+/.test(registerData.email)) {
-      errors.email = 'Por favor, insira um e-mail válido';
-      valid = false;
-    }
-
-    // Validate password
-    if (!registerData.password) {
-      errors.password = 'A senha é obrigatória';
-      valid = false;
-    } else if (registerData.password.length < 5) {
-      errors.password = 'A senha deve ter pelo menos 5 caracteres';
-      valid = false;
-    }
-
-    // Validate confirm password
-    if (registerData.password !== registerData.confirmPassword) {
-      errors.confirmPassword = 'As senhas devem coincidir';
-      valid = false;
-    }
-
-    // Validate name
-    if (!registerData.name) {
-      errors.name = 'Nome é obrigatório';
-      valid = false;
-    }
-
-    // Validate gamertag
-    if (!registerData.gamertag) {
-      errors.gamertag = 'Gamertag é obrigatória';
-      valid = false;
-    }
-
-    if (valid) {
-      try {
-        const { error } = await supabase.auth.signUp({
-          email: registerData.email,
-          password: registerData.password,
-        });
-
-        if (error) {
-          throw error;
-        }
-
-        const { error: insertError } = await supabase
-          .from('usuarios')
-          .insert([{ Email: registerData.email, Nome: registerData.name, Gamertag: registerData.gamertag }])
-          .single();
-
-        if (insertError) {
-          throw insertError;
-        }
-
-        setIsLoading(false);
-        setOpenModal(false);
-        alert('Cadastro realizado com sucesso, verifique seu e-mail para confirmá-lo e fazer login.');
-      } catch (error) {
-        setIsLoading(false);
-        alert('Erro: ' + error);
-      }
-    } else {
-      setRegisterErrors(errors);
       setIsLoading(false);
     }
   };
@@ -172,39 +86,25 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
     setOpenModal(false);
   }
 
-  const handleFieldChange = (field: string, value: string) => {
-    setRegisterData((prevState) => ({
-      ...prevState,
-      [field]: value,
-    }));
-
-    if (field === 'email' && /\S+@\S+\.\S+/.test(value)) {
-      setRegisterErrors((prevState) => ({
-        ...prevState,
-        email: '',
-      }));
-    } else if (field === 'password' && value.length >= 5) {
-      setRegisterErrors((prevState) => ({
-        ...prevState,
-        password: '',
-      }));
-    } else if (field === 'confirmPassword' && value === registerData.password) {
-      setRegisterErrors((prevState) => ({
-        ...prevState,
-        confirmPassword: '',
-      }));
-    } else if (field === 'name' && value.length > 0) {
-      setRegisterErrors((prevState) => ({
-        ...prevState,
-        name: '',
-      }));
-    } else if (field === 'gamertag' && value.length > 0) {
-      setRegisterErrors((prevState) => ({
-        ...prevState,
-        gamertag: '',
-      }));
+  const clearEmailError = () => {
+    if (emailError) {
+        if (emailError == 'Não foi possível fazer login, revise o email') {
+            setEmailError('');
+            setPasswordError('');
+        }
+        setEmailError(''); 
     }
-  };
+}
+
+const clearPasswordError = () => {
+    if (passwordError) {
+        if (passwordError == 'Não foi possível fazer login, revise a senha') {
+            setPasswordError('');
+            setEmailError('');
+        }
+        setPasswordError('');
+    }
+}
 
   if (isAuthenticated) return <>{children}</>;
 
@@ -224,13 +124,6 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
               Bem-vindo ao PlayRead!
             </Typography>
 
-            {(emailError || passwordError) && (
-              <Typography color="error" variant="body2" align="center">
-                {emailError && <div>{emailError}</div>}
-                {passwordError && <div>{passwordError}</div>}
-              </Typography>
-            )}
-
             <TextField
               fullWidth
               type="email"
@@ -239,7 +132,7 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
               disabled={isLoading}
               error={!!emailError}
               helperText={emailError || ''}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {setEmail(e.target.value); clearEmailError();}}
             />
 
             <TextField
@@ -250,7 +143,7 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
               disabled={isLoading}
               error={!!passwordError}
               helperText={passwordError || ''}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {setPassword(e.target.value); clearPasswordError();}}
             />
           </Box>
         </CardContent>
@@ -278,108 +171,16 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
         </CardActions>
       </Card>
 
-      {/* Modal de Registro */}
-      <Modal
+      <ModalCriarLogin
         open={openModal}
-        onClose={() => { }}
-        disableEscapeKeyDown
-      >
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            maxWidth: 600,
-            width: "100vw",
-            height: "100vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            bgcolor: "#121212"
-          }}
-        >
-          <Paper sx={{ padding: 4, borderRadius: 2, margin: 2 }}>
-            <Typography variant="h5" align="center" marginBottom={3}>Criar Conta</Typography>
-
-            <Typography variant="subtitle1" fontWeight="bold">Informações de login</Typography>
-            <TextField
-              fullWidth
-              size="small"
-              label="Email"
-              value={registerData.email}
-              error={!!registerErrors.email}
-              helperText={registerErrors.email}
-              onChange={(e) => handleFieldChange('email', e.target.value)}
-              margin="normal"
-            />
-            <TextField
-              fullWidth
-              size="small"
-              label="Senha"
-              type="password"
-              value={registerData.password}
-              error={!!registerErrors.password}
-              helperText={registerErrors.password}
-              onChange={(e) => handleFieldChange('password', e.target.value)}
-              margin="normal"
-            />
-            <TextField
-              fullWidth
-              size="small"
-              label="Confirmar Senha"
-              type="password"
-              value={registerData.confirmPassword}
-              error={!!registerErrors.confirmPassword}
-              helperText={registerErrors.confirmPassword}
-              onChange={(e) => handleFieldChange('confirmPassword', e.target.value)}
-              margin="normal"
-            />
-            <Typography variant="subtitle1" fontWeight="bold" marginTop={2}>Informações Pessoais</Typography>
-            <TextField
-              fullWidth
-              size="small"
-              label="Nome"
-              value={registerData.name}
-              error={!!registerErrors.name}
-              helperText={registerErrors.name}
-              onChange={(e) => handleFieldChange('name', e.target.value)}
-              margin="normal"
-            />
-            <TextField
-              fullWidth
-              size="small"
-              label="Gamertag"
-              value={registerData.gamertag}
-              error={!!registerErrors.gamertag}
-              helperText={registerErrors.gamertag}
-              onChange={(e) => handleFieldChange('gamertag', e.target.value)}
-              margin="normal"
-            />
-
-            <Box display="flex" gap={2} marginTop={3}>
-              <Button
-                variant="outlined"
-                color="primary"
-                fullWidth
-                onClick={handleModalClose}
-              >
-                Cancelar
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                fullWidth
-                onClick={handleRegisterSubmit}
-                disabled={isLoading}
-                endIcon={isLoading ? <CircularProgress color="inherit" size={20} /> : undefined}
-              >
-                Criar Conta
-              </Button>
-            </Box>
-          </Paper>
-        </Box>
-      </Modal>
+        onClose={handleModalClose}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        registerData={registerData}
+        setRegisterData={setRegisterData}
+        registerErrors={registerErrors}
+        setRegisterErrors={setRegisterErrors}
+      />
     </Box>
   );
 };

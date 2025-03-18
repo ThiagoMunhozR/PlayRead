@@ -48,7 +48,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     const result = await AuthService.auth(email, password);
 
     if (result instanceof Error) {
-      return result.message;
+      throw result;
     } else {
       localStorage.setItem(LOCAL_STORAGE_KEY__ACCESS_TOKEN, JSON.stringify(result.accessToken));
       localStorage.setItem(LOCAL_STORAGE_KEY__USER, JSON.stringify(result.user));
