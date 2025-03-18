@@ -7,8 +7,6 @@ import { Environment } from '../../environment';
 
 const supabase = createClient(Environment.SUPABASE_URL, Environment.SUPABASE_KEY);
 
-const { showAlert } = useMessageContext();
-
 const loginSchema = yup.object().shape({
   email: yup.string().email().required(),
   password: yup.string().required().min(5),
@@ -28,6 +26,7 @@ interface ILoginProps {
 
 export const Login: React.FC<ILoginProps> = ({ children }) => {
   const { isAuthenticated, login } = useAuthContext();
+  const { showAlert } = useMessageContext();
   const [isLoading, setIsLoading] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [emailError, setEmailError] = useState('');
