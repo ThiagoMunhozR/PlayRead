@@ -1,24 +1,10 @@
 import { useState } from 'react';
-import { Box, Button, Card, CardActions, CardContent, CircularProgress, TextField, Typography, Modal } from '@mui/material';
-import * as yup from 'yup';
-import { useAuthContext, useMessageContext } from '../../contexts'; // Importando o contexto de autenticação
+import { Box, Button, Card, CardActions, CardContent, CircularProgress, TextField, Typography, Modal, Paper } from '@mui/material';
+import { useAuthContext } from '../../contexts';
 import { createClient } from '@supabase/supabase-js';
 import { Environment } from '../../environment';
 
 const supabase = createClient(Environment.SUPABASE_URL, Environment.SUPABASE_KEY);
-
-const loginSchema = yup.object().shape({
-  email: yup.string().email().required(),
-  password: yup.string().required().min(5),
-});
-
-const registerSchema = yup.object().shape({
-  email: yup.string().email().required(),
-  password: yup.string().required().min(5),
-  confirmPassword: yup.string().required().min(5).oneOf([yup.ref('password')], 'As senhas devem coincidir'),
-  name: yup.string().required('Nome é obrigatório'),
-  gamertag: yup.string().required('Gamertag é obrigatória'),
-});
 
 interface ILoginProps {
   children: React.ReactNode;
@@ -26,7 +12,7 @@ interface ILoginProps {
 
 export const Login: React.FC<ILoginProps> = ({ children }) => {
   const { isAuthenticated, login } = useAuthContext();
-  const { showAlert } = useMessageContext();
+
   const [isLoading, setIsLoading] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -40,68 +26,185 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
     name: '',
     gamertag: '',
   });
+  const [registerErrors, setRegisterErrors] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    name: '',
+    gamertag: '',
+  });
 
   const handleLoginSubmit = () => {
     setIsLoading(true);
-    loginSchema
-      .validate({ email, password }, { abortEarly: false })
-      .then(dadosValidados => {
-        login(dadosValidados.email, dadosValidados.password)
-          .then(() => setIsLoading(false))
-          .catch((error) => {
-            setIsLoading(false);
-            setEmailError('Erro de autenticação: ' + error.message);
-          });
-      })
-      .catch((errors: yup.ValidationError) => {
-        setIsLoading(false);
-        errors.inner.forEach(error => {
-          if (error.path === 'email') {
-            setEmailError(error.message);
-          } else if (error.path === 'password') {
-            setPasswordError(error.message);
-          }
+    let valid = true;
+
+    // Reset errors
+    setEmailError('');
+    setPasswordError('');
+
+    if (!email) {
+      setEmailError('O e-mail é obrigatório');
+      valid = false;
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      setEmailError('Por favor, insira um e-mail válido');
+      valid = false;
+    }
+
+    if (!password) {
+      setPasswordError('A senha é obrigatória');
+      valid = false;
+    } else if (password.length < 5) {
+      setPasswordError('A senha deve ter pelo menos 5 caracteres');
+      valid = false;
+    }
+
+    if (valid) {
+      login(email, password)
+        .then(() => setIsLoading(false))
+        .catch((error) => {
+          setIsLoading(false);
+          setEmailError('Erro de autenticação: ' + error.message);
         });
-      });
+    } else {
+      setIsLoading(false);
+    }
   };
 
   const handleRegisterSubmit = async () => {
     setIsLoading(true);
 
-    try {
-      // Validar os dados de registro
-      await registerSchema.validate(registerData, { abortEarly: false });
+    // Reset register errors
+    setRegisterErrors({
+      email: '',
+      password: '',
+      confirmPassword: '',
+      name: '',
+      gamertag: '',
+    });
 
-      // Criar usuário no Supabase Authentication
-      const { error } = await supabase.auth.signUp({
-        email: registerData.email,
-        password: registerData.password,
-      });
+    let valid = true;
+    const errors = { ...registerErrors };
 
-      if (error) {
-        throw error;
+    // Validate email
+    if (!registerData.email) {
+      errors.email = 'O e-mail é obrigatório';
+      valid = false;
+    } else if (!/\S+@\S+\.\S+/.test(registerData.email)) {
+      errors.email = 'Por favor, insira um e-mail válido';
+      valid = false;
+    }
+
+    // Validate password
+    if (!registerData.password) {
+      errors.password = 'A senha é obrigatória';
+      valid = false;
+    } else if (registerData.password.length < 5) {
+      errors.password = 'A senha deve ter pelo menos 5 caracteres';
+      valid = false;
+    }
+
+    // Validate confirm password
+    if (registerData.password !== registerData.confirmPassword) {
+      errors.confirmPassword = 'As senhas devem coincidir';
+      valid = false;
+    }
+
+    // Validate name
+    if (!registerData.name) {
+      errors.name = 'Nome é obrigatório';
+      valid = false;
+    }
+
+    // Validate gamertag
+    if (!registerData.gamertag) {
+      errors.gamertag = 'Gamertag é obrigatória';
+      valid = false;
+    }
+
+    if (valid) {
+      try {
+        const { error } = await supabase.auth.signUp({
+          email: registerData.email,
+          password: registerData.password,
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        const { error: insertError } = await supabase
+          .from('usuarios')
+          .insert([{ Email: registerData.email, Nome: registerData.name, Gamertag: registerData.gamertag }])
+          .single();
+
+        if (insertError) {
+          throw insertError;
+        }
+
+        setIsLoading(false);
+        setOpenModal(false);
+        alert('Cadastro realizado com sucesso, verifique seu e-mail para confirmá-lo e fazer login.');
+      } catch (error) {
+        setIsLoading(false);
+        alert('Erro: ' + error);
       }
-
-      // Inserir dados na tabela de usuários
-      const { error: insertError } = await supabase
-        .from('usuarios')
-        .insert([{ Email: registerData.email, Nome: registerData.name, Gamertag: registerData.gamertag, }])
-        .single();
-
-      if (insertError) {
-        throw insertError;
-      }
-
+    } else {
+      setRegisterErrors(errors);
       setIsLoading(false);
-      setOpenModal(false); // Fechar o modal após sucesso
-      showAlert('Cadastro realizado com sucesso!', 'success');
-    } catch (error) {
-      setIsLoading(false);
-      showAlert('Erro: ' + error , 'error');
     }
   };
 
-  const handleModalClose = () => setOpenModal(false);
+  const handleModalClose = () => {
+    setRegisterErrors({
+      email: '',
+      password: '',
+      confirmPassword: '',
+      name: '',
+      gamertag: '',
+    });
+    setRegisterData({
+      email: '',
+      password: '',
+      confirmPassword: '',
+      name: '',
+      gamertag: '',
+    });
+    setOpenModal(false);
+  }
+
+  const handleFieldChange = (field: string, value: string) => {
+    setRegisterData((prevState) => ({
+      ...prevState,
+      [field]: value,
+    }));
+
+    if (field === 'email' && /\S+@\S+\.\S+/.test(value)) {
+      setRegisterErrors((prevState) => ({
+        ...prevState,
+        email: '',
+      }));
+    } else if (field === 'password' && value.length >= 5) {
+      setRegisterErrors((prevState) => ({
+        ...prevState,
+        password: '',
+      }));
+    } else if (field === 'confirmPassword' && value === registerData.password) {
+      setRegisterErrors((prevState) => ({
+        ...prevState,
+        confirmPassword: '',
+      }));
+    } else if (field === 'name' && value.length > 0) {
+      setRegisterErrors((prevState) => ({
+        ...prevState,
+        name: '',
+      }));
+    } else if (field === 'gamertag' && value.length > 0) {
+      setRegisterErrors((prevState) => ({
+        ...prevState,
+        gamertag: '',
+      }));
+    }
+  };
 
   if (isAuthenticated) return <>{children}</>;
 
@@ -121,6 +224,13 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
               Bem-vindo ao PlayRead!
             </Typography>
 
+            {(emailError || passwordError) && (
+              <Typography color="error" variant="body2" align="center">
+                {emailError && <div>{emailError}</div>}
+                {passwordError && <div>{passwordError}</div>}
+              </Typography>
+            )}
+
             <TextField
               fullWidth
               type="email"
@@ -128,8 +238,7 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
               value={email}
               disabled={isLoading}
               error={!!emailError}
-              helperText={emailError}
-              onKeyDown={() => setEmailError('')}
+              helperText={emailError || ''}
               onChange={(e) => setEmail(e.target.value)}
             />
 
@@ -140,8 +249,7 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
               value={password}
               disabled={isLoading}
               error={!!passwordError}
-              helperText={passwordError}
-              onKeyDown={() => setPasswordError('')}
+              helperText={passwordError || ''}
               onChange={(e) => setPassword(e.target.value)}
             />
           </Box>
@@ -163,7 +271,7 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
             fullWidth
             variant="outlined"
             color="primary"
-            onClick={() => setOpenModal(true)} // Abrir o modal para criar conta
+            onClick={() => setOpenModal(true)}
           >
             Criar Conta
           </Button>
@@ -171,68 +279,96 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
       </Card>
 
       {/* Modal de Registro */}
-      <Modal open={openModal} onClose={handleModalClose}>
+      <Modal
+        open={openModal}
+        onClose={() => { }}
+        disableEscapeKeyDown
+      >
         <Box
           sx={{
             position: 'absolute',
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            bgcolor: 'background.paper',
-            boxShadow: 24,
-            padding: 4,
-            borderRadius: 2,
             width: 400,
           }}
         >
-          <Typography variant="h6" align="center">Criar Conta</Typography>
-          <TextField
-            fullWidth
-            label="Email"
-            value={registerData.email}
-            onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-            sx={{ marginBottom: 2 }}
-          />
-          <TextField
-            fullWidth
-            label="Senha"
-            type="password"
-            value={registerData.password}
-            onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-            sx={{ marginBottom: 2 }}
-          />
-          <TextField
-            fullWidth
-            label="Confirmar Senha"
-            type="password"
-            value={registerData.confirmPassword}
-            onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
-            sx={{ marginBottom: 2 }}
-          />
-          <TextField
-            fullWidth
-            label="Nome"
-            value={registerData.name}
-            onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
-            sx={{ marginBottom: 2 }}
-          />
-          <TextField
-            fullWidth
-            label="Gamertag"
-            value={registerData.gamertag}
-            onChange={(e) => setRegisterData({ ...registerData, gamertag: e.target.value })}
-            sx={{ marginBottom: 2 }}
-          />
-          <Button
-            fullWidth
-            variant="contained"
-            color="primary"
-            onClick={handleRegisterSubmit}
-            disabled={isLoading}
-            endIcon={isLoading ? <CircularProgress color="inherit" size={20} /> : undefined}
-          >
-            Criar Conta
-          </Button>
+          <Paper sx={{ padding: 4, borderRadius: 2 }}>
+            <Typography variant="h6" align="center" marginBottom={3}>
+              Criar Conta
+            </Typography>
+
+            <Typography variant="subtitle1" fontWeight="bold">Informações de login</Typography>
+            <TextField
+              fullWidth
+              label="Email"
+              value={registerData.email}
+              error={!!registerErrors.email}
+              helperText={registerErrors.email}
+              onChange={(e) => handleFieldChange('email', e.target.value)}
+              margin="normal"
+            />
+            <TextField
+              fullWidth
+              label="Senha"
+              type="password"
+              value={registerData.password}
+              error={!!registerErrors.password}
+              helperText={registerErrors.password}
+              onChange={(e) => handleFieldChange('password', e.target.value)}
+              margin="normal"
+            />
+            <TextField
+              fullWidth
+              label="Confirmar Senha"
+              type="password"
+              value={registerData.confirmPassword}
+              error={!!registerErrors.confirmPassword}
+              helperText={registerErrors.confirmPassword}
+              onChange={(e) => handleFieldChange('confirmPassword', e.target.value)}
+              margin="normal"
+            />
+            <Typography variant="subtitle1" fontWeight="bold">Informações Pessoais</Typography>
+            <TextField
+              fullWidth
+              label="Nome"
+              value={registerData.name}
+              error={!!registerErrors.name}
+              helperText={registerErrors.name}
+              onChange={(e) => handleFieldChange('name', e.target.value)}
+              margin="normal"
+            />
+            <TextField
+              fullWidth
+              label="Gamertag"
+              value={registerData.gamertag}
+              error={!!registerErrors.gamertag}
+              helperText={registerErrors.gamertag}
+              onChange={(e) => handleFieldChange('gamertag', e.target.value)}
+              margin="normal"
+            />
+
+            <Box display="flex" gap={2} marginTop={3}>
+              <Button
+                variant="outlined"
+                color="primary"
+                fullWidth
+                onClick={handleModalClose}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                onClick={handleRegisterSubmit}
+                disabled={isLoading}
+                endIcon={isLoading ? <CircularProgress color="inherit" size={20} /> : undefined}
+              >
+                Criar Conta
+              </Button>
+            </Box>
+          </Paper>
         </Box>
       </Modal>
     </Box>
