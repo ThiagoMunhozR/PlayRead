@@ -5,6 +5,9 @@ import {
   BibliotecaDeJogos,
   DetalheDeJogos,
   ListagemDeJogo,
+  BibliotecaDeLivros,
+  ListagemDeLivro,
+  DetalheDeLivros
 } from '../pages';
 
 export const AppRoutes = () => {
@@ -20,15 +23,14 @@ export const AppRoutes = () => {
           { icon: 'settings', path: '/jogos', label: 'Gerenciar' },
         ],
       },
-      /* ESPERAR LANÇAMENTO
       {
         icon: 'menu_book',
         label: 'Livros',
         subOptions: [
           { icon: 'book', path: '/biblioteca-livros', label: 'Biblioteca' },
-          { icon: 'settings', path: '/gerenciar-livros', label: 'Gerenciar' },
+          { icon: 'settings', path: '/livros', label: 'Gerenciar' },
         ],
-      }, */
+      },
     ]);
   }, []);
 
@@ -37,6 +39,10 @@ export const AppRoutes = () => {
       <Route path="/biblioteca-jogos" element={<BibliotecaDeJogos />} />
       <Route path="/jogos" element={<ListagemDeJogo />} />
       <Route path="/jogos/detalhe/:id" element={<DetalheDeJogos />} />
+      <Route path="/biblioteca-livros" element={<BibliotecaDeLivros />} />
+      <Route path="/livros" element={<ListagemDeLivro />} />
+      <Route path="/livros/detalhe/:id" element={<DetalheDeLivros />} />
+
       <Route path="*" element={<Navigate to="/biblioteca-jogos" />} />
     </Routes>
   );
