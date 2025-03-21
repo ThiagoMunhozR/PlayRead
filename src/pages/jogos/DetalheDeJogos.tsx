@@ -35,7 +35,7 @@ export const DetalheDeJogos: React.FC = () => {
   } = useForm<FormData>({
     defaultValues: {
       id: id !== 'novo' ? Number(id) : undefined,
-      data: '',
+      data: new Date().toISOString().split('T')[0],
       nome: '',
       dataCompleto: '',
     },
@@ -45,28 +45,58 @@ export const DetalheDeJogos: React.FC = () => {
     if (id !== 'novo') {
       setIsLoading(true);
 
-      JogosService.getById(Number(id))
-        .then((result) => {
-          setIsLoading(false);
+      JogosService.getById(Number(id)).then((result) => {
+        setIsLoading(false);
 
-          if (result instanceof Error) {
-            showAlert(result.message, 'error');
-            navigate('/jogos');
-          } else {
-            setJogo(result);
-            setNome(result.nome);
-            setValue('id', result.id);
-            setValue('data', result.data || '');
-            setValue('nome', result.nome || '');
-            setValue('dataCompleto', result.dataCompleto || '');
-          }
-        });
+        if (result instanceof Error) {
+          showAlert(result.message, 'error');
+          navigate('/jogos');
+        } else {
+          setJogo(result);
+          setNome(result.nome);
+
+          // Converter a data de DD/MM/YYYY para YYYY-MM-DD
+          const DataFormatada = result.data
+            ? result.data.split('/').reverse().join('-')
+            : '';
+
+          const DataCompletaFormatada = result.data
+            ? result.dataCompleto.split('/').reverse().join('-')
+            : '';
+
+          setValue('id', result.id);
+          setValue('data', DataFormatada);
+          setValue('nome', result.nome || '');
+          setValue('dataCompleto', DataCompletaFormatada || '');
+        }
+      });
     }
   }, [id, setValue]);
 
   const handleSave = () => {
     handleSubmit((formData: FormData) => {
       setIsLoading(true);
+
+      // Função para formatar a data apenas se necessário
+      const formatarDataParaSalvar = (DataParaFormatar: string): string => {
+        console.log(DataParaFormatar);
+        if (DataParaFormatar == "-undefined-undefined" || DataParaFormatar == "") {
+          return ""; // Retorna vazio se a data não for informada
+        }
+
+        const formatoCorreto = /^\d{2}\/\d{2}\/\d{4}$/; // Verifica se está no formato DD/MM/YYYY
+
+        if (formatoCorreto.test(DataParaFormatar)) {
+          return DataParaFormatar; // Retorna a data sem alterações
+        }
+        // Converte de YYYY-MM-DD para DD/MM/YYYY
+        const [ano, mes, dia] = DataParaFormatar.split('-');
+        return `${dia}/${mes}/${ano}`;
+      };
+
+      const DataFormatada = formatarDataParaSalvar(formData.data);
+      const DataCompletaFormatada = formatarDataParaSalvar(formData.dataCompleto);
+
       if (id === 'novo') {
         JogosService.getAll(user?.CodigoUsuario).then((jogos) => {
           if (jogos instanceof Error) {
@@ -85,9 +115,9 @@ export const DetalheDeJogos: React.FC = () => {
 
               const newJogo = {
                 id: nextId, // Valor do próximo ID gerado
-                data: formData.data, // Data do jogo
+                data: DataFormatada, // Data do jogo
                 nome: formData.nome, // Nome do jogo
-                dataCompleto: formData.dataCompleto, // Data Completa (opcional)
+                dataCompleto: DataCompletaFormatada, // Data Completa (opcional)
               };
 
               // Adicionar novo jogo
@@ -95,13 +125,13 @@ export const DetalheDeJogos: React.FC = () => {
                 if (result instanceof Error) {
                   showAlert(result.message, 'error');
                 } else {
-                  showAlert('Jogo salvo com sucesso!', 'success');             
-                  if (ClicouEmFechar) {                   
+                  showAlert('Jogo salvo com sucesso!', 'success');
+                  if (ClicouEmFechar) {
                     navigate('/jogos');
-                    setClicouEmFechar(false);                    
+                    setClicouEmFechar(false);
                   } else {
-                    navigate(`/jogos/detalhe/${result}`);                  
-                  }                
+                    navigate(`/jogos/detalhe/${result}`);
+                  }
                 }
               });
             })
@@ -115,17 +145,21 @@ export const DetalheDeJogos: React.FC = () => {
         const payload = {
           id: Number(id), // Garantir que id é um número válido
           CodigoUsuario: user?.CodigoUsuario,
-          ...formData,
+          nome: formData.nome,
+          data: DataFormatada,
+          dataCompleto: DataCompletaFormatada,
         };
 
         JogosService.updateById(Number(id), payload).then((result) => {
           if (result instanceof Error) {
             showAlert(result.message, 'error');
-            showAlert('Jogo atualizado com sucesso!', 'success');
           } else {
             if (ClicouEmFechar) {
+              showAlert('Jogo alterado com sucesso!', 'success');
               navigate('/jogos');
               setClicouEmFechar(false);
+            } else {
+              showAlert('Jogo alterado com sucesso!', 'success');
             }
           }
         });
@@ -160,7 +194,7 @@ export const DetalheDeJogos: React.FC = () => {
             }
           });
       },
-      () => {} // Função que será executada se o usuário clicar em "Não"
+      () => { } // Função que será executada se o usuário clicar em "Não"
     );
   };
 
@@ -228,22 +262,21 @@ export const DetalheDeJogos: React.FC = () => {
                 {/* Campo Data */}
                 <Controller
                   name="data"
-                  disabled={isLoading}
                   control={control}
                   rules={{
                     required: 'A data é obrigatória',
-                    pattern: {
-                      value: /^\d{2}\/\d{2}\/\d{4}$/,
-                      message: 'Data inválida. Use o formato DD/MM/AAAA',
-                    },
                   }}
                   render={({ field }) => (
                     <TextField
-                      {...field}
+                      fullWidth
                       label="Data"
+                      type="date"
+                      InputLabelProps={{ shrink: true }}
+                      {...field}
+                      disabled={isLoading}
                       error={!!errors.data}
                       helperText={errors.data?.message}
-                      fullWidth
+                      value={(field.value && field.value.length > 0 && field.value.split('T')[0]) || ''}
                     />
                   )}
                 />
@@ -255,10 +288,17 @@ export const DetalheDeJogos: React.FC = () => {
                 {/* Campo Data Completo (opcional) */}
                 <Controller
                   name="dataCompleto"
-                  disabled={isLoading}
                   control={control}
                   render={({ field }) => (
-                    <TextField {...field} label="Data Completa (Opcional)" fullWidth />
+                    <TextField
+                      {...field}
+                      label="Data Completa (Opcional)"
+                      fullWidth
+                      type="date"
+                      InputLabelProps={{ shrink: true }}
+                      disabled={isLoading}
+                      value={field.value || ''}
+                    />
                   )}
                 />
               </Grid>

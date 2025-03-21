@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Card, CardContent, Grid, LinearProgress, Pagination, Typography } from '@mui/material';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Environment } from '../../shared/environment';
 import { FerramentasDaListagem } from '../../shared/components';
@@ -48,6 +48,7 @@ const getTextStyles = (isMobile: boolean) => ({
 
 export const BibliotecaDeLivros = () => {
   const [isLoadingLivros, setIsLoadingLivros] = useState(true);
+  const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(false);
   const [Livros, setLivros] = useState<any[]>([]);
   const [imagensLivros, setImagensLivros] = useState<{ [key: string]: string }>({}); // Tipando o estado
@@ -144,9 +145,9 @@ export const BibliotecaDeLivros = () => {
       barraDeFerramentas={
         <FerramentasDaListagem
           mostrarInputBusca
-          textoDaBusca={busca}
-          mostrarBotaoNovo={false}
+          textoDaBusca={busca}        
           aoMudarTextoDeBusca={(texto) => setSearchParams({ busca: texto, pagina: '1' }, { replace: true })}
+          aoClicarEmNovo={() => navigate('/livros/detalhe/novo')}
         />
       }
     >

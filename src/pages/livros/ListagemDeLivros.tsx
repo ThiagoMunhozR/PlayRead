@@ -93,7 +93,10 @@ export const ListagemDeLivro: React.FC = () => {
                     <TableBody>
                         {rows.map(row => (
                             <TableRow key={row.id}>
-                                <TableCell>
+                                <TableCell
+                                sx={{
+                                    width:'75px'
+                                }}>
                                     <IconButton size="small" onClick={() => handleDelete(row.id)}>
                                         <Icon>delete</Icon>
                                     </IconButton>

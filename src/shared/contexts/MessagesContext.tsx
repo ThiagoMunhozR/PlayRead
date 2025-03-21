@@ -75,9 +75,13 @@ export const AlertProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         autoHideDuration={3000}
         onClose={handleAlertClose}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        sx={{
+          pointerEvents: 'none', // Permite cliques em elementos fora do Snackbar
+        }}
       >
         <Alert onClose={handleAlertClose} variant={alertVariant} severity={alertSeverity}
         sx={{
+          pointerEvents: 'auto', // Permite interação apenas dentro do Alert
           ...(themeName === 'dark' && {
             bgcolor: 'background.default',
           }),

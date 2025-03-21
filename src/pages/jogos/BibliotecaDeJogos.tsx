@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Card, CardContent, Grid, LinearProgress, Pagination, Typography } from '@mui/material';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Environment } from '../../shared/environment';
 import { FerramentasDaListagem } from '../../shared/components';
@@ -48,6 +48,7 @@ const getTextStyles = (isMobile: boolean) => ({
 
 export const BibliotecaDeJogos = () => {
   const [isLoadingJogos, setIsLoadingJogos] = useState(true);
+  const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(false);
   const [jogos, setJogos] = useState<any[]>([]);
   const [imagensJogos, setImagensJogos] = useState<{ [key: string]: string }>({}); // Tipando o estado
@@ -145,8 +146,8 @@ export const BibliotecaDeJogos = () => {
         <FerramentasDaListagem
           mostrarInputBusca
           textoDaBusca={busca}
-          mostrarBotaoNovo={false}
           aoMudarTextoDeBusca={(texto) => setSearchParams({ busca: texto, pagina: '1' }, { replace: true })}
+          aoClicarEmNovo={() => navigate('/jogos/detalhe/novo')}
         />
       }
     >

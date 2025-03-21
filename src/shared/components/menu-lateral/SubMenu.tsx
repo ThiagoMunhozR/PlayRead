@@ -23,7 +23,7 @@ export const SubMenu: React.FC<ISubMenuProps> = ({ title, icon, subOptions }) =>
 
   useEffect(() => {
     const isCurrentPathInSubOptions = subOptions.some(
-      (subOption) => subOption.path === location.pathname
+      (subOption) => location.pathname.startsWith(subOption.path) // Verifica se a URL começa com o caminho
     );
     setIsOpen(isCurrentPathInSubOptions);
   }, [location.pathname, subOptions]);

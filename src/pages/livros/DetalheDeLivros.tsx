@@ -34,7 +34,7 @@ export const DetalheDeLivros: React.FC = () => {
   } = useForm<FormData>({
     defaultValues: {
       id: id !== 'novo' ? Number(id) : undefined,
-      data: '',
+      data: new Date().toISOString().split('T')[0],
       nome: '',
     },
   });
@@ -53,8 +53,13 @@ export const DetalheDeLivros: React.FC = () => {
           } else {
             setLivro(result);
             setNome(result.nome);
+
+            const DataFormatada = result.data
+            ? result.data.split('/').reverse().join('-')
+            : '';
+
             setValue('id', result.id);
-            setValue('data', result.data || '');
+            setValue('data', DataFormatada || '');
             setValue('nome', result.nome || '');
           }
         });
@@ -64,6 +69,21 @@ export const DetalheDeLivros: React.FC = () => {
   const handleSave = () => {
     handleSubmit((formData: FormData) => {
       setIsLoading(true);
+
+      // Função para formatar a data apenas se necessário
+      const formatarDataParaSalvar = (DataParaFormatar: string): string => {
+        const formatoCorreto = /^\d{2}\/\d{2}\/\d{4}$/; // Verifica se está no formato DD/MM/YYYY
+        if (formatoCorreto.test(DataParaFormatar)) {
+          return DataParaFormatar; // Retorna a data sem alterações
+        }
+        // Converte de YYYY-MM-DD para DD/MM/YYYY
+        const [ano, mes, dia] = DataParaFormatar.split('-');
+        return `${dia}/${mes}/${ano}`;
+      };
+
+      // Formatar a data antes de salvar
+      const DataFormatada = formatarDataParaSalvar(formData.data);
+
       if (id === 'novo') {
         LivrosService.getAll(user?.CodigoUsuario).then((Livros) => {
           if (Livros instanceof Error) {
@@ -82,7 +102,7 @@ export const DetalheDeLivros: React.FC = () => {
 
               const newLivro = {
                 id: nextId, // Valor do próximo ID gerado
-                data: formData.data, // Data do Livro
+                data: DataFormatada, // Data do Livro
                 nome: formData.nome, // Nome do Livro
               };
 
@@ -111,17 +131,20 @@ export const DetalheDeLivros: React.FC = () => {
         const payload = {
           id: Number(id), // Garantir que id é um número válido
           CodigoUsuario: user?.CodigoUsuario,
-          ...formData,
+          data: DataFormatada,
+          nome: formData.nome,
         };
 
         LivrosService.updateById(Number(id), payload).then((result) => {
           if (result instanceof Error) {
             showAlert(result.message, 'error');
-            showAlert('Livro atualizado com sucesso!', 'success');
           } else {
             if (ClicouEmFechar) {
+              showAlert('Livro alterado com sucesso!', 'success');
               navigate('/livros');
               setClicouEmFechar(false);
+            } else{
+              showAlert('Livro alterado com sucesso!', 'success');
             }
           }
         });
@@ -224,22 +247,21 @@ export const DetalheDeLivros: React.FC = () => {
                 {/* Campo Data */}
                 <Controller
                   name="data"
-                  disabled={isLoading}
-                  control={control}
+                  control={control}   
                   rules={{
-                    required: 'A data é obrigatória',
-                    pattern: {
-                      value: /^\d{2}\/\d{2}\/\d{4}$/,
-                      message: 'Data inválida. Use o formato DD/MM/AAAA',
-                    },
+                    required: 'A data é obrigatória',                
                   }}
                   render={({ field }) => (
                     <TextField
-                      {...field}
+                      fullWidth
                       label="Data"
+                      type="date"
+                      InputLabelProps={{ shrink: true }}
+                      {...field}
+                      disabled={isLoading}
                       error={!!errors.data}
                       helperText={errors.data?.message}
-                      fullWidth
+                      value={(field.value && field.value.length > 0 && field.value.split('T')[0]) || ''}
                     />
                   )}
                 />

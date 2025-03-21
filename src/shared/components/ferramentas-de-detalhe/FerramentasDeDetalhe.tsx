@@ -58,7 +58,7 @@ export const FerramentasDeDetalhe: React.FC<IFerramentasDeDetalheProps> = ({
             height={theme.spacing(5)}
             component={Paper}
         >
-            {(mostrarBotaoSalvar && !mostrarBotaoSalvarCarregando) && (
+            {(mostrarBotaoSalvar && !mostrarBotaoSalvarCarregando && !smDown && !mdDown) && (
                 <Button
                     color='primary'
                     disableElevation
@@ -76,11 +76,11 @@ export const FerramentasDeDetalhe: React.FC<IFerramentasDeDetalheProps> = ({
                 <Skeleton width={110} height={60} />
             )}
 
-            {(mostrarBotaoSalvarEFechar && !mostrarBotaoSalvarEFecharCarregando && !smDown && !mdDown) && (
+            {(mostrarBotaoSalvarEFechar && !mostrarBotaoSalvarEFecharCarregando) && (
                 <Button
                     color='primary'
                     disableElevation
-                    variant='outlined'
+                    variant={smDown || mdDown ? 'contained' : 'outlined'}
                     onClick={aoClicarEmSalvarEFechar}
                     startIcon={<Icon>save</Icon>}
                 >
