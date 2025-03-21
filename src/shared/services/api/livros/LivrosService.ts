@@ -21,7 +21,7 @@ type TLivrosComTotalCount = {
   totalCount: number;
 }
 
-const getAll = async (codigousuario: number | undefined, page = 1, filter = ''): Promise<TLivrosComTotalCount | Error> => {
+const getAll = async (codigousuario: number | undefined, page = 1, filter = '', pageSize = 25): Promise<TLivrosComTotalCount | Error> => {
   try {
     
     let query = supabase
@@ -43,9 +43,9 @@ const getAll = async (codigousuario: number | undefined, page = 1, filter = ''):
 
     // Paginação após a ordenação
     if (page > 0) {
-      const offset = (page - 1) * Environment.LIMITE_DE_LINHAS;
+      const offset = (page - 1) * pageSize;
       // Aplica o range apenas sobre os dados já ordenados
-      const paginatedData = sortedData?.slice(offset, offset + Environment.LIMITE_DE_LINHAS);
+      const paginatedData = sortedData?.slice(offset, offset + pageSize);
 
       return {
         data: paginatedData as IListagemLivro[], // Dados paginados e ordenados

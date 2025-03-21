@@ -68,8 +68,10 @@ export const BibliotecaDeLivros = () => {
     if (!consultaRealizada.current && user?.CodigoUsuario) {
       // Lógica para carregar os Livros
       setIsLoadingLivros(true);
-      console.log('Realizado consulta');
-      LivrosService.getAll(user?.CodigoUsuario, pagina, busca)
+
+      const pageSize = window.innerWidth <= 600 ? 24 : 25;
+
+      LivrosService.getAll(user?.CodigoUsuario, pagina, busca, pageSize)
         .then((result) => {
           setIsLoadingLivros(false);
           if (result instanceof Error) {

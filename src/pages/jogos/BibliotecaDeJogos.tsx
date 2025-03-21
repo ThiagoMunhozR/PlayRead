@@ -68,8 +68,10 @@ export const BibliotecaDeJogos = () => {
     if (!consultaRealizada.current && user?.CodigoUsuario) {
       // Lógica para carregar os jogos
       setIsLoadingJogos(true);
-      console.log('Realizado consulta');
-      JogosService.getAll(user?.CodigoUsuario, pagina, busca)
+      
+      const pageSize = window.innerWidth <= 600 ? 24 : 25;
+
+      JogosService.getAll(user?.CodigoUsuario, pagina, busca, pageSize)
         .then((result) => {
           setIsLoadingJogos(false);
           if (result instanceof Error) {
