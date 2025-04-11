@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Environment } from '../../shared/environment';
 import { FerramentasDaListagem } from '../../shared/components';
-import { LayoutBaseDePagina } from '../../shared/layouts';
+import { ILayoutBaseDePaginaHandle, LayoutBaseDePagina } from '../../shared/layouts';
 import { useAuthContext } from '../../shared/contexts';
 import { LivrosService } from '../../shared/services/api/livros/LivrosService';
 
@@ -55,6 +55,7 @@ export const BibliotecaDeLivros = () => {
   const { user } = useAuthContext();
   const [totalCount, setTotalCount] = useState(0);
   const consultaRealizada = useRef(true);
+  const layoutRef = useRef<ILayoutBaseDePaginaHandle>(null); 
 
   const [searchParams, setSearchParams] = useSearchParams();
   const pagina = useMemo(() => Number(searchParams.get('pagina') || '1'), [searchParams]);
@@ -143,6 +144,7 @@ export const BibliotecaDeLivros = () => {
 
   return (
     <LayoutBaseDePagina
+      ref={layoutRef}  
       titulo="Biblioteca de Livros"
       barraDeFerramentas={
         <FerramentasDaListagem
@@ -153,7 +155,11 @@ export const BibliotecaDeLivros = () => {
         />
       }
     >
-      <Box width="100%" display="flex" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+      <Box
+        width="100%"
+        display="flex"
+        sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }} // Permite rolagem no contêiner
+      >
         {isLoadingLivros && (
           <Box
             sx={{
@@ -168,7 +174,11 @@ export const BibliotecaDeLivros = () => {
             <LinearProgress variant="indeterminate" />
           </Box>
         )}
-        <Grid container spacing={isMobile ? 1 : 2} margin={0}>
+        <Grid
+          container     
+          spacing={isMobile ? 1 : 2}
+          margin={0}
+        >
           {Livros.map((Livro) => (
             <Grid
               item
@@ -184,7 +194,7 @@ export const BibliotecaDeLivros = () => {
                 <Box
                   component="img"
                   src={imagensLivros[Livro.nome] || '/imagens/loading.gif'}
-                  alt=''
+                  alt=""
                   sx={getImageStyles(isMobile)}
                 />
 
@@ -226,7 +236,11 @@ export const BibliotecaDeLivros = () => {
             <Pagination
               page={pagina}
               count={Math.ceil(totalCount / Environment.LIMITE_DE_LINHAS)}
-              onChange={(_, newPage) => setSearchParams({ busca, pagina: newPage.toString() }, { replace: true })}
+              onChange={(_, newPage) => {
+                setSearchParams({ busca, pagina: newPage.toString() }, { replace: true });
+
+                layoutRef.current?.scrollToTop();
+              }}
             />
           </Box>
         )}

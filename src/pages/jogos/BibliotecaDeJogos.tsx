@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Environment } from '../../shared/environment';
 import { FerramentasDaListagem } from '../../shared/components';
-import { LayoutBaseDePagina } from '../../shared/layouts';
+import { ILayoutBaseDePaginaHandle, LayoutBaseDePagina } from '../../shared/layouts';
 import { useAuthContext } from '../../shared/contexts';
 import { JogosService } from '../../shared/services/api/jogos/JogosService';
 
@@ -55,6 +55,7 @@ export const BibliotecaDeJogos = () => {
   const { user } = useAuthContext();
   const [totalCount, setTotalCount] = useState(0);
   const consultaRealizada = useRef(true);
+  const layoutRef = useRef<ILayoutBaseDePaginaHandle>(null); 
 
   const [searchParams, setSearchParams] = useSearchParams();
   const pagina = useMemo(() => Number(searchParams.get('pagina') || '1'), [searchParams]);
@@ -143,6 +144,7 @@ export const BibliotecaDeJogos = () => {
 
   return (
     <LayoutBaseDePagina
+      ref={layoutRef}  
       titulo="Biblioteca de Jogos"
       barraDeFerramentas={
         <FerramentasDaListagem
@@ -153,9 +155,13 @@ export const BibliotecaDeJogos = () => {
         />
       }
     >
-      <Box width="100%" display="flex" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+      <Box
+        width="100%"
+        display="flex"
+        sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }} // Permite rolagem no contêiner
+      >
         {isLoadingJogos && (
-          <Box
+          <Box 
             sx={{
               width: '90%', // Faz o LinearProgress ocupar 90% da largura
               margin: '0 auto', // Centraliza na tela
@@ -168,7 +174,11 @@ export const BibliotecaDeJogos = () => {
             <LinearProgress variant="indeterminate" />
           </Box>
         )}
-        <Grid container spacing={isMobile ? 1 : 2} margin={0}>
+        <Grid
+          container     
+          spacing={isMobile ? 1 : 2}
+          margin={0}
+        >
           {jogos.map((jogo) => (
             <Grid
               item
@@ -184,7 +194,7 @@ export const BibliotecaDeJogos = () => {
                 <Box
                   component="img"
                   src={imagensJogos[jogo.nome] || '/imagens/loading.gif'}
-                  alt=''
+                  alt=""
                   sx={getImageStyles(isMobile)}
                 />
 
@@ -207,7 +217,7 @@ export const BibliotecaDeJogos = () => {
                     sx={getTextStyles(isMobile).subtitle}
                   >
                     {jogo.data}
-                    <br></br>
+                    <br />
                     {jogo.dataCompleto && (
                       <Typography component="span" color="text.secondary" sx={{ ...getTextStyles(isMobile).subtitle, marginRight: 3 }}>
                         🏆 {jogo.dataCompleto}
@@ -232,7 +242,11 @@ export const BibliotecaDeJogos = () => {
             <Pagination
               page={pagina}
               count={Math.ceil(totalCount / Environment.LIMITE_DE_LINHAS)}
-              onChange={(_, newPage) => setSearchParams({ busca, pagina: newPage.toString() }, { replace: true })}
+              onChange={(_, newPage) => {
+                setSearchParams({ busca, pagina: newPage.toString() }, { replace: true });
+
+                layoutRef.current?.scrollToTop();
+              }}
             />
           </Box>
         )}
