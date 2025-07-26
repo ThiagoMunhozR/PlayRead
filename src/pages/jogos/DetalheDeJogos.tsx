@@ -33,16 +33,18 @@ export const DetalheDeJogos: React.FC = () => {
   const location = useLocation();
   const from = location.state?.from || 'listagem';
 
-  // Atualiza imagem do jogo quando está em edição
   useEffect(() => {
-    if (id !== 'novo' && nome) {
-      carregarImagensItens([{ nome }], 'jogos', JogosService.buscarCapaDoJogo)
-        .then((imgs) => {
-          // imgs is an object like { [nome]: url }, so get the url by nome
-          setImagemJogo(imgs[nome] || '/imagens/SemImagem.jpg');
-        });
+    if (id !== 'novo') {
+      JogosService.getById(Number(id)).then((result) => {
+        if (!(result instanceof Error) && result.nome) {
+          carregarImagensItens([{ nome: result.nome }], 'jogos', JogosService.buscarCapaDoJogo)
+            .then((imgs) => {
+              setImagemJogo(imgs[result.nome] || '/imagens/SemImagem.jpg');
+            });
+        }
+      });
     }
-  }, [id, nome]);
+  }, [id]);
 
   const handleNavigateBack = () => {
     if (from === 'biblioteca') {
