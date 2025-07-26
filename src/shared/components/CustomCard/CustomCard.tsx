@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, Box, Typography, Rating } from '@mui/material';
+import Tooltip from '@mui/material/Tooltip';
 
 interface CustomCardProps {
   isMobile: boolean;
@@ -51,6 +52,7 @@ const getTextStyles = (isMobile: boolean) => ({
   },
 });
 
+
 export const CustomCard: React.FC<CustomCardProps> = ({
   isMobile,
   imageSrc,
@@ -60,67 +62,98 @@ export const CustomCard: React.FC<CustomCardProps> = ({
   showTrophy,
   cardHeight,
   imageHeight,
-}) => (
-  <Card sx={getCardStyles(isMobile, cardHeight)}>
-    <Box
-      sx={{
-        width: '100%',
-        height: isMobile ? 300 : 420,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: '4px 4px 0 0',
-        boxSizing: 'border-box',
-        overflow: 'hidden',
-        padding: 0,
-      }}
-    >
-      <Box
-        component="img"
-        src={imageSrc}
-        alt=""
-        sx={getImageStyles(isMobile, imageHeight)}
-      />
-    </Box>
-    <CardContent
-      sx={{
-        padding: isMobile ? '4px' : '12px',
-        textAlign: 'center',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        height: isMobile ? '80px' : '105px',
-        minHeight: isMobile ? '80px' : '105px',
-      }}
-    >
-      <Typography
-        variant="h6"
-        sx={getTextStyles(isMobile).title}
-        title={title}
-        marginTop={1}
+}) => {
+  const [active, setActive] = useState(false);
+
+  // Animação de destaque
+  const highlightStyles = active
+    ? {
+        boxShadow: '0 0 24px 0 rgba(255, 215, 0, 0.35)',
+        border: showTrophy ? '3px solid #FFD700' : '2px solid #1976d2',
+        transition: 'box-shadow 0.3s, border 0.3s',
+      }
+    : {};
+
+  // Tooltip aparece quando ativo
+  return (
+    <Tooltip title={title} open={active} placement="top" arrow>
+      <Card
+        sx={{
+          ...getCardStyles(isMobile, cardHeight),
+          ...(showTrophy
+            ? {
+                border: '2px solid #FFD700',
+                boxShadow: '0 0 12px 0 rgba(255, 215, 0, 0.18)',
+                transition: 'border 0.2s, box-shadow 0.2s',
+              }
+            : {}),
+          ...highlightStyles,
+          cursor: 'pointer',
+        }}
+        onClick={() => setActive(true)}
+        onMouseLeave={() => setActive(false)}
       >
-        {title} {showTrophy && '🏆'}
-      </Typography>
-      {subtitle && (
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={getTextStyles(isMobile).subtitle}
+        <Box
+          sx={{
+            width: '100%',
+            height: isMobile ? 300 : 420,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '4px 4px 0 0',
+            boxSizing: 'border-box',
+            overflow: 'hidden',
+            padding: 0,
+          }}
         >
-          {subtitle}
-        </Typography>
-      )}
-      {typeof rating === 'number' && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 0.5 }}>
-          <Rating
-            value={rating}
-            precision={0.5}
-            readOnly
-            size={isMobile ? 'small' : 'medium'}
+          <Box
+            component="img"
+            src={imageSrc}
+            alt=""
+            sx={getImageStyles(isMobile, imageHeight)}
           />
         </Box>
-      )}
-    </CardContent>
-  </Card>
-);
+        <CardContent
+          sx={{
+            padding: isMobile ? '4px' : '12px',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            height: isMobile ? '80px' : '105px',
+            minHeight: isMobile ? '80px' : '105px',
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={getTextStyles(isMobile).title}
+            title={title}
+            marginTop={1}
+          >
+            {title} {showTrophy && '🏆'}
+          </Typography>
+          {subtitle && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={getTextStyles(isMobile).subtitle}
+            >
+              {subtitle}
+            </Typography>
+          )}
+          {typeof rating === 'number' && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 0.5 }}>
+              <Rating
+                value={rating}
+                precision={0.5}
+                readOnly
+                size={isMobile ? 'small' : 'medium'}
+              />
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+    </Tooltip>
+  );
+}

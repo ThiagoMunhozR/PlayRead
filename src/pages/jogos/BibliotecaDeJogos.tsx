@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { OrdemType, DirecaoType } from '../../shared/components/ferramentas-da-listagem/components/OrdenacaoMenu';
 import { Box } from '@mui/material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -7,13 +8,7 @@ import { CustomCardList, FerramentasDaListagem } from '../../shared/components';
 import { ILayoutBaseDePaginaHandle, LayoutBaseDePagina } from '../../shared/layouts';
 import { useAppThemeContext, useAuthContext } from '../../shared/contexts';
 import { JogosService } from '../../shared/services/api/jogos/JogosService';
-
-// Função para remover caracteres especiais do nome do arquivo
-function removerCaracteresEspeciais(nomeArquivo: string) {
-  return nomeArquivo
-    .replace(/:/g, '') // Remove os dois pontos
-    .replace(/[\/\*\?\"<>\|]/g, ''); // Remove outros caracteres inválidos
-}
+import { carregarImagensItens } from '../../shared/utils/carregarImagensItens';
 
 export const BibliotecaDeJogos = () => {
   const [isLoadingJogos, setIsLoadingJogos] = useState(true);
@@ -25,6 +20,9 @@ export const BibliotecaDeJogos = () => {
   const [totalCount, setTotalCount] = useState(0);
   const consultaRealizada = useRef(true);
   const layoutRef = useRef<ILayoutBaseDePaginaHandle>(null); 
+  // Estados de ordenação
+  const [ordem, setOrdem] = useState<OrdemType>('data');
+  const [direcao, setDirecao] = useState<DirecaoType>('desc');
 
   const [searchParams, setSearchParams] = useSearchParams();
   const pagina = useMemo(() => Number(searchParams.get('pagina') || '1'), [searchParams]);
@@ -32,16 +30,15 @@ export const BibliotecaDeJogos = () => {
 
   useEffect(() => {
     consultaRealizada.current = false;
-  }, [pagina, busca]);
+  }, [pagina, busca, ordem, direcao]);
 
   useEffect(() => {
     if (!consultaRealizada.current && user?.CodigoUsuario) {
-      // Lógica para carregar os jogos
       setIsLoadingJogos(true);
-      
       const pageSize = window.innerWidth <= 600 ? 24 : 25;
 
-      JogosService.getAll(user?.CodigoUsuario, pagina, busca, pageSize)
+      // Consulta customizada conforme ordenação
+      JogosService.getAll(user?.CodigoUsuario, pagina, busca, pageSize, ordem, direcao)
         .then((result) => {
           setIsLoadingJogos(false);
           if (result instanceof Error) {
@@ -53,52 +50,16 @@ export const BibliotecaDeJogos = () => {
         });
       consultaRealizada.current = true;
     }
-  }, [user?.CodigoUsuario, pagina, busca]);
+  }, [user?.CodigoUsuario, pagina, busca, ordem, direcao]);
 
-  // Função para verificar e buscar a capa do jogo
-  const verificarCapaDoJogo = async (nomeJogo: string) => {
-    const imagePath = `/imagens/jogos/${removerCaracteresEspeciais(nomeJogo)}.jpg`;
-    const defaultImagePath = '/imagens/SemImagem.jpg';
 
-    // Verificar se a imagem já existe no caminho local
-    const image = new Image();
-    image.src = imagePath;
-
-    // Usar uma Promise para garantir o carregamento da imagem
-    return new Promise<string>((resolve) => {
-      image.onload = () => {
-        resolve(imagePath);
-      };
-
-      image.onerror = async () => {
-        // Caso não tenha encontrado a imagem localmente, buscar no cachê ou API
-        try {
-          const imageUrl = await JogosService.buscarCapaDoJogo(nomeJogo);
-          resolve(imageUrl); 
-        } catch (error) {
-          console.error('Erro ao buscar a capa do jogo:', error);
-          resolve(defaultImagePath); 
-        }
-      };
-    });
-  };
-
-  // Carregar as imagens dos jogos
+  // Carregar as imagens dos jogos (utilitário genérico)
   useEffect(() => {
-    const carregarImagens = async () => {
-      const imagens: { [key: string]: string } = {}; // Tipando a variável temporária
-      for (const jogo of jogos) {
-        const capa = await verificarCapaDoJogo(jogo.nome);
-
-        imagens[jogo.nome] = capa;
-      }
-      setImagensJogos(imagens);
-    };
-
     if (jogos.length > 0) {
-      carregarImagens(); // Carrega as imagens apenas quando os jogos são carregados
+      carregarImagensItens(jogos, 'jogos', JogosService.buscarCapaDoJogo)
+        .then(setImagensJogos);
     }
-  }, [jogos]); // Dependência para executar sempre que a lista de jogos mudar
+  }, [jogos]);
 
   return (
     <LayoutBaseDePagina
@@ -110,6 +71,13 @@ export const BibliotecaDeJogos = () => {
           textoDaBusca={busca}
           aoMudarTextoDeBusca={(texto) => setSearchParams({ busca: texto, pagina: '1' }, { replace: true })}
           aoClicarEmNovo={() => navigate('/jogos/detalhe/novo')}
+          ordem={ordem}
+          direcao={direcao}
+          aoMudarOrdenacao={(novaOrdem, novaDirecao) => {
+            setOrdem(novaOrdem);
+            setDirecao(novaDirecao);
+            setSearchParams({ busca, pagina: '1' }, { replace: true });
+          }}
         />
       }
     >

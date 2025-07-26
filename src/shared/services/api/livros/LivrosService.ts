@@ -1,18 +1,18 @@
 import { Environment } from '../../../environment';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(Environment.SUPABASE_URL, Environment.SUPABASE_KEY);
+import { GenericService, OrderType } from '../../GenericService';
 
 export interface IListagemLivro {
   id: number;
   data: string;
   nome: string;
+  avaliacao?: number | null;
 }
 
 export interface IDetalheLivro {
   id: number;
   data: string;
   nome: string;
+  avaliacao?: number | null;
   CodigoUsuario: number | undefined;
 }
 
@@ -21,146 +21,86 @@ type TLivrosComTotalCount = {
   totalCount: number;
 }
 
-const getAll = async (codigousuario: number | undefined, page = 1, filter = '', pageSize = 25): Promise<TLivrosComTotalCount | Error> => {
-  try {
-    
-    let query = supabase
-      .from('livros') // Nome da tabela
-      .select('*', { count: 'exact' })
-      .ilike('nome', `%${filter}%`)
-      .eq('CodigoUsuario', codigousuario)  // Filtro de nome
-
-    const { data, error, count } = await query;
-
-    if (error) throw new Error(error.message || 'Erro ao listar os registros.');
-
-    // Ordenando os dados pela data no cliente (antes da paginação)
-    const sortedData = data?.sort((a, b) => {
-      const dateA = new Date(a.data.split('/').reverse().join('-'));  // Convertendo de 'DD/MM/YYYY' para 'YYYY-MM-DD'
-      const dateB = new Date(b.data.split('/').reverse().join('-'));  // Convertendo de 'DD/MM/YYYY' para 'YYYY-MM-DD'
-      return dateB.getTime() - dateA.getTime();  // Ordem decrescente
-    });
-
-    // Paginação após a ordenação
-    if (page > 0) {
-      const offset = (page - 1) * pageSize;
-      // Aplica o range apenas sobre os dados já ordenados
-      const paginatedData = sortedData?.slice(offset, offset + pageSize);
-
-      return {
-        data: paginatedData as IListagemLivro[], // Dados paginados e ordenados
-        totalCount: count || 0,
-      };
-    }
-
-    // Se page for 0, retornar os dados ordenados sem paginação
-    return {
-      data: sortedData as IListagemLivro[],
-      totalCount: count || 0,
+const getAll = async (
+  codigousuario: number | undefined,
+  page = 1,
+  filter = '',
+  pageSize = 25,
+  ordem: 'data' | 'alfabetica' | 'avaliacao' = 'data',
+  direcao: 'asc' | 'desc' = 'desc'
+): Promise<TLivrosComTotalCount | Error> => {
+  let order: OrderType | undefined;
+  let customSort: ((data: any[], order?: OrderType) => any[]) | undefined;
+  if (ordem === 'alfabetica') {
+    order = { column: 'nome', direction: direcao };
+  } else if (ordem === 'avaliacao') {
+    order = { column: 'avaliacao', direction: direcao };
+    customSort = (data) => {
+      const nulos = (data ?? []).filter((l: IListagemLivro) => l.avaliacao === null || l.avaliacao === undefined);
+      const avaliados = (data ?? []).filter((l: IListagemLivro) => l.avaliacao !== null && l.avaliacao !== undefined).slice().sort((a: IListagemLivro, b: IListagemLivro) => {
+        const diffAvaliacao = direcao === 'desc'
+          ? (b.avaliacao ?? 0) - (a.avaliacao ?? 0)
+          : (a.avaliacao ?? 0) - (b.avaliacao ?? 0);
+        if (diffAvaliacao !== 0) return diffAvaliacao;
+        // desempate: data decrescente
+        const dateA = new Date(a.data.split('/').reverse().join('-')).getTime();
+        const dateB = new Date(b.data.split('/').reverse().join('-')).getTime();
+        return dateB - dateA;
+      });
+      return direcao === 'asc' ? [...nulos, ...avaliados] : [...avaliados, ...nulos];
     };
-  } catch (error) {
-    console.error(error);
-    return new Error((error as Error).message || 'Erro ao listar os registros.');
+  } else if (ordem === 'data') {
+    customSort = (data) => {
+      return data?.slice().sort((a: IListagemLivro, b: IListagemLivro) => {
+        const dateA = new Date(a.data.split('/').reverse().join('-'));
+        const dateB = new Date(b.data.split('/').reverse().join('-'));
+        return direcao === 'desc' ? dateB.getTime() - dateA.getTime() : dateA.getTime() - dateB.getTime();
+      });
+    };
   }
+  return await GenericService.getAll<IListagemLivro>({
+    table: 'livros',
+    page,
+    pageSize,
+    filter: { column: 'nome', value: filter },
+    order,
+    customSort,
+    extraFilters: { CodigoUsuario: codigousuario },
+  });
 };
 
 
 const getById = async (id: number): Promise<IDetalheLivro | Error> => {
-  try {
-    const { data, error } = await supabase
-      .from('livros') // Nome da tabela
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) throw new Error(error.message || 'Erro ao consultar o registro.');
-
-    return data as IDetalheLivro; // Garantindo que data seja do tipo IDetalheLivro
-  } catch (error) {
-    console.error(error);
-    return new Error((error as Error).message || 'Erro ao consultar o registro.');
-  }
+  return await GenericService.getById<IDetalheLivro>('livros', id);
 };
 
 const create = async (
   id: number,
   data: string,
   nome: string,
+  avaliacao: number | null | undefined,
   CodigoUsuario: number | undefined,
 ): Promise<number | Error> => {
-  try {
-    // Criando o objeto com os parâmetros recebidos
-    const dados: IDetalheLivro = {
-      id,
-      data,
-      nome,
-      CodigoUsuario
-    };
-
-    // Inserir no banco de dados
-    const { error } = await supabase
-      .from('livros') // Nome da tabela
-      .insert([dados]) // Inserir o objeto completo
-      .single();
-
-    // Verificar se ocorreu erro
-    if (error) throw new Error(error.message || 'Erro ao criar o registro.');
-
-    return id;
-  } catch (error) {
-    console.error(error);
-    return new Error((error as Error).message || 'Erro ao criar o registro.');
-  }
+  const dados: IDetalheLivro = {
+    id,
+    data,
+    nome,
+    avaliacao,
+    CodigoUsuario
+  };
+  return await GenericService.create<IDetalheLivro>('livros', dados);
 };
 
 const updateById = async (id: number, dados: IDetalheLivro): Promise<void | Error> => {
-  if (!id) {
-    return new Error('ID inválido para a atualização');
-  }
-
-  try {
-    const { error } = await supabase
-      .from('livros') // Nome da tabela
-      .update(dados)
-      .eq('id', id);
-
-    if (error) throw new Error(error.message || 'Erro ao atualizar o registro.');
-  } catch (error) {
-    console.error(error);
-    return new Error((error as Error).message || 'Erro ao atualizar o registro.');
-  }
+  return await GenericService.updateById<IDetalheLivro>('livros', id, dados);
 };
 
 const deleteById = async (id: number): Promise<void | Error> => {
-  try {
-    const { error } = await supabase
-      .from('livros') // Nome da tabela
-      .delete()
-      .eq('id', id);
-
-    if (error) throw new Error(error.message || 'Erro ao apagar o registro.');
-  } catch (error) {
-    console.error(error);
-    return new Error((error as Error).message || 'Erro ao apagar o registro.');
-  }
+  return await GenericService.deleteById('livros', id);
 };
 
 const getUltimoRegistroLivros = async (tableName: string): Promise<number | Error> => {
-  try {
-    const { data, error } = await supabase
-      .from(tableName)
-      .select('id') // Seleciona a coluna ID
-      .order('id', { ascending: false }) // Ordena pelo ID em ordem decrescente
-      .limit(1); // Obtém o maior ID
-
-    if (error) throw new Error(error.message || `Erro ao buscar o último ID na tabela ${tableName}.`);
-
-    // Retorna o próximo ID ou 1 se não houver registros
-    return data && data.length > 0 ? data[0].id : 0;
-  } catch (error) {
-    console.error(error);
-    return new Error((error as Error).message || 'Erro ao buscar o último ID.');
-  }
+  return await GenericService.getUltimoRegistro(tableName);
 };
 
 const buscarCapaDoLivro = async (nomeLivro: string): Promise<string> => {

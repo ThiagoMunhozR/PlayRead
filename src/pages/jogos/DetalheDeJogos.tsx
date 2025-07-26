@@ -1,5 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Grid, LinearProgress, Paper, Rating, TextField, Typography } from '@mui/material';
+import { Box, Grid, LinearProgress, Paper, Rating, TextField, Typography, IconButton } from '@mui/material';
+import RemoveIcon from '@mui/icons-material/Remove';
+import AddIcon from '@mui/icons-material/Add';
 import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 
@@ -219,9 +221,7 @@ export const DetalheDeJogos: React.FC = () => {
 
       <form style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <Box margin={1} display="flex" flexDirection="column" component={Paper} variant="outlined">
-
           <Grid container direction="column" padding={2} spacing={2}>
-
             {isLoading && (
               <Grid item>
                 <LinearProgress variant='indeterminate' />
@@ -304,14 +304,54 @@ export const DetalheDeJogos: React.FC = () => {
                     name="avaliacao"
                     control={control}
                     render={({ field }) => (
-                      <Rating
-                        {...field}
-                        precision={0.5}
-                        value={field.value || 0}
-                        onChange={(_, value) => field.onChange(value)}
-                        disabled={isLoading}
-                        size="large"
-                      />
+                      <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                        <IconButton
+                          aria-label="Diminuir meia estrela"
+                          onClick={() => field.onChange(Math.max(0, (field.value || 0) - 0.5))}
+                          disabled={isLoading || (field.value || 0) <= 0}
+                          sx={{
+                            color: 'white',
+                            opacity: 0.5,
+                            p: 0.2,
+                            background: 'none',
+                            border: 'none',
+                            boxShadow: 'none',
+                            outline: 'none',
+                            '&:hover': { background: 'none', opacity: 0.8 },
+                            '&:focus': { background: 'none', boxShadow: 'none', outline: 'none' },
+                            '&:active': { background: 'none', boxShadow: 'none', outline: 'none' },
+                          }}
+                        >
+                          <RemoveIcon fontSize="small" />
+                        </IconButton>
+                        <Rating
+                          {...field}
+                          precision={0.5}
+                          value={field.value || 0}
+                          onChange={(_, value) => field.onChange(value)}
+                          disabled={isLoading}
+                          size="large"
+                        />
+                        <IconButton
+                          aria-label="Aumentar meia estrela"
+                          onClick={() => field.onChange(Math.min(5, (field.value || 0) + 0.5))}
+                          disabled={isLoading || (field.value || 0) >= 5}
+                          sx={{
+                            color: 'white',
+                            opacity: 0.5,
+                            p: 0.2,
+                            background: 'none',
+                            border: 'none',
+                            boxShadow: 'none',
+                            outline: 'none',
+                            '&:hover': { background: 'none', opacity: 0.8 },
+                            '&:focus': { background: 'none', boxShadow: 'none', outline: 'none' },
+                            '&:active': { background: 'none', boxShadow: 'none', outline: 'none' },
+                          }}
+                        >
+                          <AddIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
                     )}
                   />
                 </Box>

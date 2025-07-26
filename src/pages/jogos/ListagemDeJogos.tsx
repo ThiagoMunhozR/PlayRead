@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { LinearProgress, Paper, Rating, useTheme } from '@mui/material';
-import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridRenderCellParams, GridSortModel } from '@mui/x-data-grid';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { IListagemJogo, JogosService } from '../../shared/services/api/jogos/JogosService';
 import { FerramentasDaListagem } from '../../shared/components';
@@ -21,6 +21,11 @@ export const ListagemDeJogo: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const { user } = useAuthContext();
     const { isMobile } = useAppThemeContext();
+    // Estado de ordenação
+    const [sortModel, setSortModel] = useState<GridSortModel>(() => {
+        const saved = localStorage.getItem('jogos-grid-sort');
+        return saved ? JSON.parse(saved) : [{ field: 'nome', sort: 'asc' }];
+    });
 
     const busca = useMemo(() => {
         return searchParams.get('busca') || '';
@@ -86,7 +91,7 @@ export const ListagemDeJogo: React.FC = () => {
                 />
             ),
         },
-        { field: 'nome', headerName: 'Jogo', flex: 1, headerClassName: 'super-app-theme--header', },
+        { field: 'nome', headerName: 'Jogo', hideable: false, flex: 1, headerClassName: 'super-app-theme--header', },
         { field: 'data', headerName: 'Data', flex: 1, headerClassName: 'super-app-theme--header', },
         { field: 'dataCompleto', headerName: 'Completo', flex: 1, headerClassName: 'super-app-theme--header', },
         {
@@ -104,6 +109,11 @@ export const ListagemDeJogo: React.FC = () => {
             ),
         },
     ];
+
+    // Salva o sortModel no localStorage sempre que mudar
+    useEffect(() => {
+        localStorage.setItem('jogos-grid-sort', JSON.stringify(sortModel));
+    }, [sortModel]);
 
     return (
         <LayoutBaseDePagina
@@ -139,6 +149,8 @@ export const ListagemDeJogo: React.FC = () => {
                         pageSizeOptions={[8, 15, 30, 50]}
                         paginationModel={paginationModel}
                         onPaginationModelChange={(model) => setPaginationModel(model)}
+                        sortModel={sortModel}
+                        onSortModelChange={setSortModel}
                         localeText={{
                             MuiTablePagination: {
                                 labelRowsPerPage: "Linhas por página",
@@ -160,7 +172,7 @@ export const ListagemDeJogo: React.FC = () => {
                                     avaliacao: !isMobile,
                                 }
                             }
-                        }}
+                        }}                        
                     />
                 )}
             </Paper>
