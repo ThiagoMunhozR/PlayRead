@@ -21,7 +21,7 @@ export const FerramentasDaListagem: React.FC<IBarraDeFerramentasProps> = ({
     aoClicarEmNovo,
     textoBotaoNovo = 'Novo',
     mostrarBotaoNovo = true,
-    ordem = 'data',
+    ordem,
     direcao = 'desc',
     aoMudarOrdenacao,
 }) => {
@@ -46,8 +46,9 @@ export const FerramentasDaListagem: React.FC<IBarraDeFerramentasProps> = ({
           onChange={(e) => aoMudarTextoDeBusca?.(e.target.value)}
         />
       )}
-      {/* Botão de ordenação */}
-      <OrdenacaoMenu ordem={ordem} direcao={direcao} onChange={aoMudarOrdenacao ?? (() => {})} />
+      {ordem && (
+        <OrdenacaoMenu ordem={ordem} direcao={direcao} onChange={aoMudarOrdenacao ?? (() => {})} />
+      )}
       <Box flex={1} display="flex" justifyContent="end">
         {mostrarBotaoNovo && (
           <Button

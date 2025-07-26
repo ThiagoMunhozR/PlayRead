@@ -1,14 +1,15 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Box, Grid, LinearProgress, Paper, Rating, TextField, Typography, IconButton } from '@mui/material';
 import RemoveIcon from '@mui/icons-material/Remove';
 import AddIcon from '@mui/icons-material/Add';
 import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 
-import { FerramentasDeDetalhe } from '../../shared/components';
+import { CustomCard, FerramentasDeDetalhe } from '../../shared/components';
 import { LayoutBaseDePagina } from '../../shared/layouts';
 import { JogosService } from '../../shared/services/api/jogos/JogosService';
-import { useAuthContext, useMessageContext } from '../../shared/contexts';
+import { useAppThemeContext, useAuthContext, useMessageContext } from '../../shared/contexts';
+import { carregarImagensItens } from '../../shared/utils/carregarImagensItens';
 
 type FormData = {
   id?: number;
@@ -24,9 +25,32 @@ export const DetalheDeJogos: React.FC = () => {
   const { showAlert, showConfirmation } = useMessageContext();
 
   const [isLoading, setIsLoading] = useState(false);
+  const { isMobile } = useAppThemeContext();
   const [nome, setNome] = useState('');
   const [ClicouEmFechar, setClicouEmFechar] = useState(false);
   const { user } = useAuthContext();
+  const [imagemJogo, setImagemJogo] = useState<string>('/imagens/SemImagem.jpg');
+  const location = useLocation();
+  const from = location.state?.from || 'listagem';
+
+  // Atualiza imagem do jogo quando está em edição
+  useEffect(() => {
+    if (id !== 'novo' && nome) {
+      carregarImagensItens([{ nome }], 'jogos', JogosService.buscarCapaDoJogo)
+        .then((imgs) => {
+          // imgs is an object like { [nome]: url }, so get the url by nome
+          setImagemJogo(imgs[nome] || '/imagens/SemImagem.jpg');
+        });
+    }
+  }, [id, nome]);
+
+  const handleNavigateBack = () => {
+    if (from === 'biblioteca') {
+      navigate('/biblioteca-jogos');
+    } else {
+      navigate('/jogos');
+    }
+  };
 
   const {
     handleSubmit,
@@ -52,7 +76,7 @@ export const DetalheDeJogos: React.FC = () => {
 
         if (result instanceof Error) {
           showAlert(result.message, 'error');
-          navigate('/jogos');
+          handleNavigateBack();
         } else {
           setNome(result.nome);
 
@@ -130,7 +154,7 @@ export const DetalheDeJogos: React.FC = () => {
                 } else {
                   showAlert('Jogo salvo com sucesso!', 'success');
                   if (ClicouEmFechar) {
-                    navigate('/jogos');
+                    handleNavigateBack();
                     setClicouEmFechar(false);
                   } else {
                     navigate(`/jogos/detalhe/${result}`);
@@ -159,7 +183,7 @@ export const DetalheDeJogos: React.FC = () => {
             showAlert(result.message, 'error');
           } else if (ClicouEmFechar) {
             showAlert('Jogo alterado com sucesso!', 'success');
-            navigate('/jogos');
+            handleNavigateBack();
             setClicouEmFechar(false);
           } else {
             showAlert('Jogo alterado com sucesso!', 'success');
@@ -192,7 +216,7 @@ export const DetalheDeJogos: React.FC = () => {
               showAlert(result.message, 'error');
             } else {
               showAlert('Registro apagado com sucesso!', 'success');
-              navigate('/jogos');
+              handleNavigateBack();
             }
           });
       },
@@ -213,153 +237,176 @@ export const DetalheDeJogos: React.FC = () => {
           aoClicarEmSalvar={handleSave}
           aoClicarEmSalvarEFechar={handleSaveClose}
           aoClicarEmApagar={() => handleDelete(Number(id))}
-          aoClicarEmVoltar={() => navigate('/jogos')}
-          aoClicarEmNovo={() => navigate('/jogos/detalhe/novo')}
+          aoClicarEmVoltar={handleNavigateBack}
+          aoClicarEmNovo={() => navigate(`/jogos/detalhe/novo`, { state: { from: 'listagem' } })}
         />
       }
     >
 
       <form style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <Box margin={1} display="flex" flexDirection="column" component={Paper} variant="outlined">
-          <Grid container direction="column" padding={2} spacing={2}>
-            {isLoading && (
-              <Grid item>
-                <LinearProgress variant='indeterminate' />
-              </Grid>
-            )}
-            <Grid container item direction="row" spacing={2}>
-              <Grid item xs={12} sm={6} md={6} lg={4} xl={2}>
-                {/* Campo Nome */}
-                <Controller
-                  name="nome"
-                  control={control}
-                  rules={{ required: 'O nome é obrigatório' }}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Nome do Jogo"
-                      disabled={isLoading}
-                      error={!!errors.nome}
-                      helperText={errors.nome?.message}
-                      fullWidth
-                      onChange={(e) => {
-                        field.onChange(e);
-                        setNome(e.target.value);
-                      }}
-                    />
-                  )}
-                />
-              </Grid>
-            </Grid>
 
-            <Grid container item direction="row" spacing={2}>
-              <Grid item xs={12} sm={6} md={3} lg={2} xl={2}>
-                {/* Campo Data */}
-                <Controller
-                  name="data"
-                  control={control}
-                  rules={{
-                    required: 'A data é obrigatória',
-                  }}
-                  render={({ field }) => (
-                    <TextField
-                      fullWidth
-                      label="Data"
-                      type="date"
-                      InputLabelProps={{ shrink: true }}
-                      {...field}
-                      disabled={isLoading}
-                      error={!!errors.data}
-                      helperText={errors.data?.message}
-                      value={(field.value && field.value.length > 0 && field.value.split('T')[0]) || ''}
-                    />
-                  )}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3} lg={2} xl={2}>
-                {/* Campo Data Completo (opcional) */}
-                <Controller
-                  name="dataCompleto"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Data Completa (Opcional)"
-                      fullWidth
-                      type="date"
-                      InputLabelProps={{ shrink: true }}
-                      disabled={isLoading}
-                      value={field.value || ''}
-                    />
-                  )}
-                />
-              </Grid>
-            </Grid>
+          <Grid container spacing={2} alignItems="flex-start" padding={2}>
+            <Grid item xs={12} sm={4} md={4} lg={4} xl={4}>
+              <Grid container direction="column" padding={2} spacing={2}>
 
-            <Grid container item direction="row" spacing={2}>
-              <Grid item xs={12} sm={6} md={6} lg={4} xl={2}>
-                <Box component={Paper} elevation={0} sx={{ p: 2, borderRadius: 2, width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', border: '2px solid', borderColor: 'divider' }}>
-                  <Typography variant="body1" mb={1} align="center">Avaliação</Typography>
-                  <Controller
-                    name="avaliacao"
-                    control={control}
-                    render={({ field }) => (
-                      <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                        <IconButton
-                          aria-label="Diminuir meia estrela"
-                          onClick={() => field.onChange(Math.max(0, (field.value || 0) - 0.5))}
-                          disabled={isLoading || (field.value || 0) <= 0}
-                          sx={{
-                            color: 'white',
-                            opacity: 0.5,
-                            p: 0.2,
-                            background: 'none',
-                            border: 'none',
-                            boxShadow: 'none',
-                            outline: 'none',
-                            '&:hover': { background: 'none', opacity: 0.8 },
-                            '&:focus': { background: 'none', boxShadow: 'none', outline: 'none' },
-                            '&:active': { background: 'none', boxShadow: 'none', outline: 'none' },
-                          }}
-                        >
-                          <RemoveIcon fontSize="small" />
-                        </IconButton>
-                        <Rating
+                {isLoading && (
+                  <Grid item>
+                    <LinearProgress variant='indeterminate' />
+                  </Grid>
+                )}
+                <Grid container item direction="row" spacing={2}>
+                  <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                    {/* Campo Nome */}
+                    <Controller
+                      name="nome"
+                      control={control}
+                      rules={{ required: 'O nome é obrigatório' }}
+                      render={({ field }) => (
+                        <TextField
                           {...field}
-                          precision={0.5}
-                          value={field.value || 0}
-                          onChange={(_, value) => field.onChange(value)}
+                          label="Nome do Jogo"
                           disabled={isLoading}
-                          size="large"
-                        />
-                        <IconButton
-                          aria-label="Aumentar meia estrela"
-                          onClick={() => field.onChange(Math.min(5, (field.value || 0) + 0.5))}
-                          disabled={isLoading || (field.value || 0) >= 5}
-                          sx={{
-                            color: 'white',
-                            opacity: 0.5,
-                            p: 0.2,
-                            background: 'none',
-                            border: 'none',
-                            boxShadow: 'none',
-                            outline: 'none',
-                            '&:hover': { background: 'none', opacity: 0.8 },
-                            '&:focus': { background: 'none', boxShadow: 'none', outline: 'none' },
-                            '&:active': { background: 'none', boxShadow: 'none', outline: 'none' },
+                          error={!!errors.nome}
+                          helperText={errors.nome?.message}
+                          fullWidth
+                          onChange={(e) => {
+                            field.onChange(e);
+                            setNome(e.target.value);
                           }}
-                        >
-                          <AddIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    )}
+                        />
+                      )}
+                    />
+                  </Grid>
+                </Grid>
+
+                <Grid container item direction="row" spacing={2}>
+                  <Grid item xs={12} sm={6} md={6} lg={6} xl={6}>
+                    {/* Campo Data */}
+                    <Controller
+                      name="data"
+                      control={control}
+                      rules={{
+                        required: 'A data é obrigatória',
+                      }}
+                      render={({ field }) => (
+                        <TextField
+                          fullWidth
+                          label="Data"
+                          type="date"
+                          InputLabelProps={{ shrink: true }}
+                          {...field}
+                          disabled={isLoading}
+                          error={!!errors.data}
+                          helperText={errors.data?.message}
+                          value={(field.value && field.value.length > 0 && field.value.split('T')[0]) || ''}
+                        />
+                      )}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={6} lg={6} xl={6}>
+                    {/* Campo Data Completo (opcional) */}
+                    <Controller
+                      name="dataCompleto"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="Data Completa (Opcional)"
+                          fullWidth
+                          type="date"
+                          InputLabelProps={{ shrink: true }}
+                          disabled={isLoading}
+                          value={field.value || ''}
+                        />
+                      )}
+                    />
+                  </Grid>
+                </Grid>
+
+                <Grid container item direction="row" spacing={2}>
+                  <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
+                    <Box component={Paper} elevation={0} sx={{ p: 2, borderRadius: 2, width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', border: '2px solid', borderColor: 'divider' }}>
+                      <Typography variant="body1" mb={1} align="center">Avaliação</Typography>
+                      <Controller
+                        name="avaliacao"
+                        control={control}
+                        render={({ field }) => (
+                          <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                            <IconButton
+                              aria-label="Diminuir meia estrela"
+                              onClick={() => field.onChange(Math.max(0, (field.value || 0) - 0.25))}
+                              disabled={isLoading || (field.value || 0) <= 0}
+                              sx={{
+                                color: 'white',
+                                opacity: 0.5,
+                                p: 0.2,
+                                background: 'none',
+                                border: 'none',
+                                boxShadow: 'none',
+                                outline: 'none',
+                                '&:hover': { background: 'none', opacity: 0.8 },
+                                '&:focus': { background: 'none', boxShadow: 'none', outline: 'none' },
+                                '&:active': { background: 'none', boxShadow: 'none', outline: 'none' },
+                              }}
+                            >
+                              <RemoveIcon fontSize="small" />
+                            </IconButton>
+                            <Rating
+                              {...field}
+                              precision={0.25}
+                              value={field.value || 0}
+                              onChange={(_, value) => field.onChange(value)}
+                              disabled={isLoading}
+                              size="large"
+                            />
+                            <IconButton
+                              aria-label="Aumentar meia estrela"
+                              onClick={() => field.onChange(Math.min(5, (field.value || 0) + 0.25))}
+                              disabled={isLoading || (field.value || 0) >= 5}
+                              sx={{
+                                color: 'white',
+                                opacity: 0.5,
+                                p: 0.2,
+                                background: 'none',
+                                border: 'none',
+                                boxShadow: 'none',
+                                outline: 'none',
+                                '&:hover': { background: 'none', opacity: 0.8 },
+                                '&:focus': { background: 'none', boxShadow: 'none', outline: 'none' },
+                                '&:active': { background: 'none', boxShadow: 'none', outline: 'none' },
+                              }}
+                            >
+                              <AddIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+                        )}
+                      />
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Grid>
+            </Grid>
+            {!isMobile && (
+              <Grid item xs={12} sm={6} md={4} lg={2} xl={2}>
+                <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                  {/* CustomCard dinâmico */}
+                  <CustomCard
+                    imageSrc={imagemJogo}
+                    title={nome}
+                    subtitle={control._formValues?.data || ''}
+                    rating={control._formValues?.avaliacao || 0}
+                    showTrophy={!!control._formValues?.dataCompleto}
+                    isMobile={false}
                   />
                 </Box>
               </Grid>
+            )}
+            {/* Coluna 3: Vazia */}
+            <Grid item xs={12} sm={4} md={4} lg={2} xl={2}>
+              <Box sx={{ width: '100%', height: '100%' }} />
             </Grid>
-
           </Grid>
-
         </Box>
 
       </form>

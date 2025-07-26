@@ -11,16 +11,16 @@ import { useDebounce } from '../../shared/hooks';
 
 export const ListagemDeJogo: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
+    const { isMobile } = useAppThemeContext();
     const { debounce } = useDebounce();
     const navigate = useNavigate();
     const theme = useTheme();
     const { showAlert, showConfirmation } = useMessageContext();
-    const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 8 });
+    const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: isMobile ? 15 : 50 });
     const [rows, setRows] = useState<IListagemJogo[]>([]);
     const [filteredRows, setFilteredRows] = useState<IListagemJogo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { user } = useAuthContext();
-    const { isMobile } = useAppThemeContext();
     // Estado de ordenação
     const [sortModel, setSortModel] = useState<GridSortModel>(() => {
         const saved = localStorage.getItem('jogos-grid-sort');
@@ -102,7 +102,7 @@ export const ListagemDeJogo: React.FC = () => {
             renderCell: (params: GridRenderCellParams) => (
                 <Rating
                     value={params.value || 0}
-                    precision={0.5}
+                    precision={0.25}
                     readOnly
                     size="small"
                 />
@@ -123,7 +123,7 @@ export const ListagemDeJogo: React.FC = () => {
                     mostrarInputBusca
                     textoDaBusca={busca}
                     textoBotaoNovo="Novo"
-                    aoClicarEmNovo={() => navigate('/jogos/detalhe/novo')}
+                    aoClicarEmNovo={() => navigate('/jogos/detalhe/novo', { state: { from: 'listagem' } })}
                     aoMudarTextoDeBusca={(texto) => setSearchParams({ busca: texto }, { replace: true })}
                 />
             }
@@ -146,7 +146,7 @@ export const ListagemDeJogo: React.FC = () => {
                         columns={columns}
                         loading={isLoading}
                         pagination
-                        pageSizeOptions={[8, 15, 30, 50]}
+                        pageSizeOptions={[15, 30, 50, 100]}
                         paginationModel={paginationModel}
                         onPaginationModelChange={(model) => setPaginationModel(model)}
                         sortModel={sortModel}

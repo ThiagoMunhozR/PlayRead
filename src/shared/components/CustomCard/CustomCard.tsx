@@ -146,7 +146,7 @@ export const CustomCard: React.FC<CustomCardProps> = ({
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 0.5 }}>
               <Rating
                 value={rating}
-                precision={0.5}
+                precision={0.25}
                 readOnly
                 size={isMobile ? 'small' : 'medium'}
               />

@@ -19,10 +19,9 @@ export const BibliotecaDeJogos = () => {
   const { user } = useAuthContext();
   const [totalCount, setTotalCount] = useState(0);
   const consultaRealizada = useRef(true);
-  const layoutRef = useRef<ILayoutBaseDePaginaHandle>(null); 
-  // Estados de ordenação
-  const [ordem, setOrdem] = useState<OrdemType>('data');
-  const [direcao, setDirecao] = useState<DirecaoType>('desc');
+  const layoutRef = useRef<ILayoutBaseDePaginaHandle>(null);
+  const [ordem, setOrdem] = useState<OrdemType>(() => localStorage.getItem('biblioteca-jogos-ordem') as OrdemType || 'data');
+  const [direcao, setDirecao] = useState<DirecaoType>(() => localStorage.getItem('biblioteca-jogos-direcao') as DirecaoType || 'desc');
 
   const [searchParams, setSearchParams] = useSearchParams();
   const pagina = useMemo(() => Number(searchParams.get('pagina') || '1'), [searchParams]);
@@ -63,19 +62,21 @@ export const BibliotecaDeJogos = () => {
 
   return (
     <LayoutBaseDePagina
-      ref={layoutRef}  
+      ref={layoutRef}
       titulo="Biblioteca de Jogos"
       barraDeFerramentas={
         <FerramentasDaListagem
           mostrarInputBusca
           textoDaBusca={busca}
           aoMudarTextoDeBusca={(texto) => setSearchParams({ busca: texto, pagina: '1' }, { replace: true })}
-          aoClicarEmNovo={() => navigate('/jogos/detalhe/novo')}
+          aoClicarEmNovo={() => navigate('/jogos/detalhe/novo', { state: { from: 'biblioteca' } })}
           ordem={ordem}
           direcao={direcao}
           aoMudarOrdenacao={(novaOrdem, novaDirecao) => {
             setOrdem(novaOrdem);
             setDirecao(novaDirecao);
+            localStorage.setItem('biblioteca-jogos-ordem', novaOrdem);
+            localStorage.setItem('biblioteca-jogos-direcao', novaDirecao);
             setSearchParams({ busca, pagina: '1' }, { replace: true });
           }}
         />
