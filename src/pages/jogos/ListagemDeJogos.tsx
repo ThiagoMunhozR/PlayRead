@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Icon, IconButton, LinearProgress, Paper, useTheme } from '@mui/material';
+import { LinearProgress, Paper, Rating, useTheme } from '@mui/material';
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { IListagemJogo, JogosService } from '../../shared/services/api/jogos/JogosService';
 import { FerramentasDaListagem } from '../../shared/components';
-import { useAuthContext, useMessageContext } from '../../shared/contexts';
+import { ActionMenu } from '../../shared/components/ActionMenu/ActionMenu';
+import { useAppThemeContext, useAuthContext, useMessageContext } from '../../shared/contexts';
 import { LayoutBaseDePagina } from '../../shared/layouts';
 import { useDebounce } from '../../shared/hooks';
 
@@ -14,41 +15,41 @@ export const ListagemDeJogo: React.FC = () => {
     const navigate = useNavigate();
     const theme = useTheme();
     const { showAlert, showConfirmation } = useMessageContext();
-    const [pageSize, setPageSize] = useState(8);
-
+    const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 8 });
     const [rows, setRows] = useState<IListagemJogo[]>([]);
+    const [filteredRows, setFilteredRows] = useState<IListagemJogo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [totalCount, setTotalCount] = useState(0);
     const { user } = useAuthContext();
+    const { isMobile } = useAppThemeContext();
 
     const busca = useMemo(() => {
         return searchParams.get('busca') || '';
     }, [searchParams]);
 
-    const pagina = useMemo(() => {
-        return Number(searchParams.get('pagina') || '1');
-    }, [searchParams]);
-
-    const CarregarJogos = () => {
-        JogosService.getAll(user?.CodigoUsuario, pagina, busca, pageSize).then((result) => {
-            if (result instanceof Error) {
-                showAlert(result.message, 'error');
-                setIsLoading(false);
-            } else {
-                setTotalCount(result.totalCount);
-                setRows(result.data);
-                setIsLoading(false);
-            }
-        });
-    };
-
     useEffect(() => {
         setIsLoading(true);
-
         debounce(() => {
-            CarregarJogos();
+            JogosService.getAll(user?.CodigoUsuario, 0, '', 9999).then((result) => {
+                if (result instanceof Error) {
+                    showAlert(result.message, 'error');
+                    setIsLoading(false);
+                } else {
+                    setRows(result.data);
+                    setIsLoading(false);
+                }
+            });
         });
-    }, [busca, pagina, pageSize]);
+    }, [user?.CodigoUsuario]);
+
+    useEffect(() => {
+        // Filtra os jogos conforme a busca
+        let filtered = rows;
+        if (busca.trim() !== '') {
+            filtered = rows.filter(jogo => jogo.nome.toLowerCase().includes(busca.toLowerCase()));
+        }
+        setFilteredRows(filtered);
+        setPaginationModel((prev) => ({ ...prev, page: 0 })); // Sempre volta para a primeira página ao buscar
+    }, [busca, rows]);
 
     const handleDelete = (id: number) => {
         showConfirmation(
@@ -59,7 +60,8 @@ export const ListagemDeJogo: React.FC = () => {
                         showAlert(result.message, 'error');
                     } else {
                         showAlert('Registro apagado com sucesso!', 'success');
-                        CarregarJogos();
+                        // Atualiza localmente
+                        setRows(prev => prev.filter(jogo => jogo.id !== id));
                     }
                 });
             },
@@ -67,29 +69,40 @@ export const ListagemDeJogo: React.FC = () => {
         );
     };
 
-    // Definição das colunas do DataGrid
     const columns: GridColDef[] = [
         {
-            field: 'acoes',
-            disableColumnMenu: true,
-            headerName: 'Ações',
-            headerAlign: 'center',
+            field: 'Ações',
+            headerName: isMobile ? '' : 'Ações',
+            width: isMobile ? 54 : 90,
             headerClassName: 'super-app-theme--header',
             sortable: false,
+            resizable: false,
+            hideable: false,
             renderCell: (params: GridRenderCellParams) => (
-                <>
-                    <IconButton size="small" onClick={() => handleDelete(params.row.id)}>
-                        <Icon>delete</Icon>
-                    </IconButton>
-                    <IconButton size="small" onClick={() => navigate(`/jogos/detalhe/${params.row.id}`)}>
-                        <Icon>edit</Icon>
-                    </IconButton>
-                </>
+                <ActionMenu
+                    isMobile={isMobile}
+                    onEdit={() => navigate(`/jogos/detalhe/${params.row.id}`)}
+                    onDelete={() => handleDelete(params.row.id)}
+                />
             ),
         },
         { field: 'nome', headerName: 'Jogo', flex: 1, headerClassName: 'super-app-theme--header', },
         { field: 'data', headerName: 'Data', flex: 1, headerClassName: 'super-app-theme--header', },
         { field: 'dataCompleto', headerName: 'Completo', flex: 1, headerClassName: 'super-app-theme--header', },
+        {
+            field: 'avaliacao',
+            headerName: 'Avaliação',
+            flex: 1,
+            headerClassName: 'super-app-theme--header',
+            renderCell: (params: GridRenderCellParams) => (
+                <Rating
+                    value={params.value || 0}
+                    precision={0.5}
+                    readOnly
+                    size="small"
+                />
+            ),
+        },
     ];
 
     return (
@@ -101,7 +114,7 @@ export const ListagemDeJogo: React.FC = () => {
                     textoDaBusca={busca}
                     textoBotaoNovo="Novo"
                     aoClicarEmNovo={() => navigate('/jogos/detalhe/novo')}
-                    aoMudarTextoDeBusca={(texto) => setSearchParams({ busca: texto, pagina: '1' }, { replace: true })}
+                    aoMudarTextoDeBusca={(texto) => setSearchParams({ busca: texto }, { replace: true })}
                 />
             }
         >
@@ -119,17 +132,13 @@ export const ListagemDeJogo: React.FC = () => {
                     <LinearProgress />
                 ) : (
                     <DataGrid
-                        rows={rows}
+                        rows={filteredRows}
                         columns={columns}
-                        rowCount={totalCount}
-                        paginationMode="server"
                         loading={isLoading}
-                        pageSizeOptions={[8, 15, 30, 50]} // Permite mudar o tamanho da página
-                        paginationModel={{ page: pagina - 1, pageSize }} // Ajusta a página para o formato correto
-                        onPaginationModelChange={(model) => {
-                            setSearchParams({ busca, pagina: String(model.page + 1) }, { replace: true });
-                            setPageSize(model.pageSize);
-                        }}             
+                        pagination
+                        pageSizeOptions={[8, 15, 30, 50]}
+                        paginationModel={paginationModel}
+                        onPaginationModelChange={(model) => setPaginationModel(model)}
                         localeText={{
                             MuiTablePagination: {
                                 labelRowsPerPage: "Linhas por página",
@@ -140,6 +149,17 @@ export const ListagemDeJogo: React.FC = () => {
                             columnMenuFilter: "Filtrar",
                             columnMenuHideColumn: "Ocultar coluna",
                             columnMenuShowColumns: "Mostrar colunas",
+                            columnMenuManageColumns: "Gerenciar colunas",
+                        }}
+                        sx={{ height: 'auto' }}
+                        initialState={{
+                            columns: {
+                                columnVisibilityModel: {
+                                    data: !isMobile,
+                                    dataCompleto: !isMobile,
+                                    avaliacao: !isMobile,
+                                }
+                            }
                         }}
                     />
                 )}

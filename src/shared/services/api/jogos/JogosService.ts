@@ -8,6 +8,7 @@ export interface IListagemJogo {
   data: string;
   nome: string;
   dataCompleto: string;
+  avaliacao: number;
 }
 
 export interface IDetalheJogo {
@@ -15,6 +16,7 @@ export interface IDetalheJogo {
   data: string;
   nome: string;
   dataCompleto: string;
+  avaliacao: number;
   CodigoUsuario: number | undefined;
 }
 
@@ -89,6 +91,7 @@ const create = async (
   data: string,
   nome: string,
   dataCompleto: string,
+  avaliacao: number,
   CodigoUsuario: number | undefined,
 ): Promise<number | Error> => {
   try {
@@ -98,7 +101,8 @@ const create = async (
       data,
       nome,
       dataCompleto,
-      CodigoUsuario
+      CodigoUsuario,
+      avaliacao
     };
 
     // Inserir no banco de dados

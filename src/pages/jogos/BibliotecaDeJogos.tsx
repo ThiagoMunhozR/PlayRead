@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Card, CardContent, Grid, LinearProgress, Pagination, Typography } from '@mui/material';
+import { Box, LinearProgress } from '@mui/material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Environment } from '../../shared/environment';
-import { FerramentasDaListagem } from '../../shared/components';
+import { CustomCardList, FerramentasDaListagem } from '../../shared/components';
 import { ILayoutBaseDePaginaHandle, LayoutBaseDePagina } from '../../shared/layouts';
-import { useAuthContext } from '../../shared/contexts';
+import { useAppThemeContext, useAuthContext } from '../../shared/contexts';
 import { JogosService } from '../../shared/services/api/jogos/JogosService';
 
 // Função para remover caracteres especiais do nome do arquivo
@@ -15,41 +15,10 @@ function removerCaracteresEspeciais(nomeArquivo: string) {
     .replace(/[\/\*\?\"<>\|]/g, ''); // Remove outros caracteres inválidos
 }
 
-// Função para estilos dinâmicos dos cards
-const getCardStyles = (isMobile: boolean) => ({
-  height: isMobile ? 320 : 455, // Altura menor para celulares
-  width: isMobile ? '90%' : '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'space-between',
-  flexGrow: 1, // Permite que o card cresça e ocupe o espaço disponível
-});
-
-// Função para estilos dinâmicos das imagens
-const getImageStyles = (isMobile: boolean) => ({
-  width: '100%', // A largura será 100% do card
-  height: '100%', // A altura será 100% do card
-  objectFit: 'cover', // A imagem preencherá o espaço do contêiner sem distorção
-  maxHeight: isMobile ? 240 : 350, // Limita a altura máxima para imagens grandes
-  borderRadius: '4px 4px 0 0', // Arredondar os cantos superiores
-});
-
-// Função para estilos dinâmicos do texto
-const getTextStyles = (isMobile: boolean) => ({
-  title: {
-    fontSize: isMobile ? '0.92rem' : '1.25rem', // Tamanho reduzido para celulares
-    fontWeight: 600,
-  },
-  subtitle: {
-    fontSize: isMobile ? '0.75rem' : '1rem', // Texto secundário menor para celulares
-    marginTop: isMobile ? 0.5 : 1,
-  },
-});
-
 export const BibliotecaDeJogos = () => {
   const [isLoadingJogos, setIsLoadingJogos] = useState(true);
+  const { isMobile } = useAppThemeContext();
   const navigate = useNavigate();
-  const [isMobile, setIsMobile] = useState(false);
   const [jogos, setJogos] = useState<any[]>([]);
   const [imagensJogos, setImagensJogos] = useState<{ [key: string]: string }>({}); // Tipando o estado
   const { user } = useAuthContext();
@@ -85,17 +54,6 @@ export const BibliotecaDeJogos = () => {
       consultaRealizada.current = true;
     }
   }, [user?.CodigoUsuario, pagina, busca]);
-
-  // Detectar tamanho da tela e ajustar isMobile
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 600);
-
-    handleResize(); // Configura o estado inicial
-    window.addEventListener('resize', handleResize);
-
-    // Cleanup para remover o event listener
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   // Função para verificar e buscar a capa do jogo
   const verificarCapaDoJogo = async (nomeJogo: string) => {
@@ -160,96 +118,26 @@ export const BibliotecaDeJogos = () => {
         display="flex"
         sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }} // Permite rolagem no contêiner
       >
-        {isLoadingJogos && (
-          <Box 
-            sx={{
-              width: '90%', // Faz o LinearProgress ocupar 90% da largura
-              margin: '0 auto', // Centraliza na tela
-              position: 'absolute',
-              top: '50%', // Fica na vertical centralizada
-              left: '50%', // Fica na horizontal centralizada
-              transform: 'translate(-50%, -50%)', // Ajuste para o centro exato
-            }}
-          >
-            <LinearProgress variant="indeterminate" />
-          </Box>
-        )}
-        <Grid
-          container     
-          spacing={isMobile ? 1 : 2}
-          margin={0}
-        >
-          {jogos.map((jogo) => (
-            <Grid
-              item
-              key={jogo.id}
-              xs={6} // 2 cards por linha em celulares
-              sm={4} // 3 cards por linha em tablets
-              md={4} // 3 cards por linha em telas médias
-              lg={2.4} // 5 cards por linha em desktops
-              xl={2.4} // 5 cards por linha em telas grandes
-            >
-              <Card sx={getCardStyles(isMobile)}>
-                {/* Imagem da capa do jogo */}
-                <Box
-                  component="img"
-                  src={imagensJogos[jogo.nome] || '/imagens/loading.gif'}
-                  alt=""
-                  sx={getImageStyles(isMobile)}
-                />
-
-                {/* Conteúdo do card */}
-                <CardContent
-                  sx={{
-                    padding: isMobile ? '4px' : '12px', // Menos padding em celulares
-                    textAlign: 'center',
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    sx={getTextStyles(isMobile).title}
-                  >
-                    {jogo.nome}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={getTextStyles(isMobile).subtitle}
-                  >
-                    {jogo.data}
-                    <br />
-                    {jogo.dataCompleto && (
-                      <Typography component="span" color="text.secondary" sx={{ ...getTextStyles(isMobile).subtitle, marginRight: 3 }}>
-                        🏆 {jogo.dataCompleto}
-                      </Typography>
-                    )}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-        {(totalCount > 0 && totalCount > Environment.LIMITE_DE_LINHAS) && (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginTop: 2, // Espaçamento acima da paginação
-              marginBottom: 2, // Espaçamento abaixo da paginação
-            }}
-          >
-            <Pagination
-              page={pagina}
-              count={Math.ceil(totalCount / Environment.LIMITE_DE_LINHAS)}
-              onChange={(_, newPage) => {
-                setSearchParams({ busca, pagina: newPage.toString() }, { replace: true });
-
-                layoutRef.current?.scrollToTop();
-              }}
-            />
-          </Box>
-        )}
+        <CustomCardList
+          items={jogos.map((jogo) => ({
+            id: jogo.id,
+            imageSrc: imagensJogos[jogo.nome] || '/imagens/loading.gif',
+            title: jogo.nome,
+            subtitle: jogo.data,
+            rating: jogo.avaliacao || 0,
+            showTrophy: !!jogo.dataCompleto,
+          }))}
+          isMobile={isMobile}
+          showPagination={true}
+          page={pagina}
+          totalCount={totalCount}
+          limitPerPage={Environment.LIMITE_DE_LINHAS}
+          isLoading={isLoadingJogos}
+          onPageChange={(newPage) => {
+            setSearchParams({ busca, pagina: newPage.toString() }, { replace: true });
+            layoutRef.current?.scrollToTop();
+          }}
+        />
       </Box>
     </LayoutBaseDePagina>
   );

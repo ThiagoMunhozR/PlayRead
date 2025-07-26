@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Grid, LinearProgress, Paper, TextField, Typography } from '@mui/material';
+import { Box, Grid, LinearProgress, Paper, Rating, TextField, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 
@@ -8,12 +8,12 @@ import { LayoutBaseDePagina } from '../../shared/layouts';
 import { JogosService } from '../../shared/services/api/jogos/JogosService';
 import { useAuthContext, useMessageContext } from '../../shared/contexts';
 
-
 type FormData = {
   id?: number;
   data: string;
   nome: string;
   dataCompleto: string;
+  avaliacao: number;
 };
 
 export const DetalheDeJogos: React.FC = () => {
@@ -22,7 +22,6 @@ export const DetalheDeJogos: React.FC = () => {
   const { showAlert, showConfirmation } = useMessageContext();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [, setJogo] = useState<FormData | null>(null);
   const [nome, setNome] = useState('');
   const [ClicouEmFechar, setClicouEmFechar] = useState(false);
   const { user } = useAuthContext();
@@ -38,6 +37,7 @@ export const DetalheDeJogos: React.FC = () => {
       data: new Date().toISOString().split('T')[0],
       nome: '',
       dataCompleto: '',
+      avaliacao: 0,
     },
   });
 
@@ -52,7 +52,6 @@ export const DetalheDeJogos: React.FC = () => {
           showAlert(result.message, 'error');
           navigate('/jogos');
         } else {
-          setJogo(result);
           setNome(result.nome);
 
           // Converter a data de DD/MM/YYYY para YYYY-MM-DD
@@ -68,6 +67,7 @@ export const DetalheDeJogos: React.FC = () => {
           setValue('data', DataFormatada);
           setValue('nome', result.nome || '');
           setValue('dataCompleto', DataCompletaFormatada || '');
+          setValue('avaliacao', result.avaliacao ?? 0);
         }
       });
     }
@@ -118,10 +118,11 @@ export const DetalheDeJogos: React.FC = () => {
                 data: DataFormatada, // Data do jogo
                 nome: formData.nome, // Nome do jogo
                 dataCompleto: DataCompletaFormatada, // Data Completa (opcional)
+                avaliacao: formData.avaliacao, // Avaliação inicial
               };
 
               // Adicionar novo jogo
-              JogosService.create(newJogo.id, newJogo.data, newJogo.nome, newJogo.dataCompleto, user?.CodigoUsuario).then((result) => {
+              JogosService.create(newJogo.id, newJogo.data, newJogo.nome, newJogo.dataCompleto, newJogo.avaliacao, user?.CodigoUsuario).then((result) => {
                 if (result instanceof Error) {
                   showAlert(result.message, 'error');
                 } else {
@@ -148,19 +149,18 @@ export const DetalheDeJogos: React.FC = () => {
           nome: formData.nome,
           data: DataFormatada,
           dataCompleto: DataCompletaFormatada,
+          avaliacao: formData.avaliacao,
         };
 
         JogosService.updateById(Number(id), payload).then((result) => {
           if (result instanceof Error) {
             showAlert(result.message, 'error');
+          } else if (ClicouEmFechar) {
+            showAlert('Jogo alterado com sucesso!', 'success');
+            navigate('/jogos');
+            setClicouEmFechar(false);
           } else {
-            if (ClicouEmFechar) {
-              showAlert('Jogo alterado com sucesso!', 'success');
-              navigate('/jogos');
-              setClicouEmFechar(false);
-            } else {
-              showAlert('Jogo alterado com sucesso!', 'success');
-            }
+            showAlert('Jogo alterado com sucesso!', 'success');
           }
         });
       }
@@ -227,13 +227,8 @@ export const DetalheDeJogos: React.FC = () => {
                 <LinearProgress variant='indeterminate' />
               </Grid>
             )}
-
-            <Grid item>
-              <Typography variant='h6'>Geral</Typography>
-            </Grid>
-
             <Grid container item direction="row" spacing={2}>
-              <Grid item xs={12} sm={12} md={6} lg={4} xl={2}>
+              <Grid item xs={12} sm={6} md={6} lg={4} xl={2}>
                 {/* Campo Nome */}
                 <Controller
                   name="nome"
@@ -258,7 +253,7 @@ export const DetalheDeJogos: React.FC = () => {
             </Grid>
 
             <Grid container item direction="row" spacing={2}>
-              <Grid item xs={12} sm={12} md={6} lg={4} xl={2}>
+              <Grid item xs={12} sm={6} md={3} lg={2} xl={2}>
                 {/* Campo Data */}
                 <Controller
                   name="data"
@@ -281,10 +276,7 @@ export const DetalheDeJogos: React.FC = () => {
                   )}
                 />
               </Grid>
-            </Grid>
-
-            <Grid container item direction="row" spacing={2}>
-              <Grid item xs={12} sm={12} md={6} lg={4} xl={2}>
+              <Grid item xs={12} sm={6} md={3} lg={2} xl={2}>
                 {/* Campo Data Completo (opcional) */}
                 <Controller
                   name="dataCompleto"
@@ -301,6 +293,28 @@ export const DetalheDeJogos: React.FC = () => {
                     />
                   )}
                 />
+              </Grid>
+            </Grid>
+
+            <Grid container item direction="row" spacing={2}>
+              <Grid item xs={12} sm={6} md={6} lg={4} xl={2}>
+                <Box component={Paper} elevation={0} sx={{ p: 2, borderRadius: 2, width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', border: '2px solid', borderColor: 'divider' }}>
+                  <Typography variant="body1" mb={1} align="center">Avaliação</Typography>
+                  <Controller
+                    name="avaliacao"
+                    control={control}
+                    render={({ field }) => (
+                      <Rating
+                        {...field}
+                        precision={0.5}
+                        value={field.value || 0}
+                        onChange={(_, value) => field.onChange(value)}
+                        disabled={isLoading}
+                        size="large"
+                      />
+                    )}
+                  />
+                </Box>
               </Grid>
             </Grid>
 
