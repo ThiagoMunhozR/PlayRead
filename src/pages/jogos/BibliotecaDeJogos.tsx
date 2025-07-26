@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, LinearProgress } from '@mui/material';
+import { Box } from '@mui/material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Environment } from '../../shared/environment';
