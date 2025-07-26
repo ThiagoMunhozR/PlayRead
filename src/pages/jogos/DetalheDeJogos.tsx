@@ -1,8 +1,9 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Box, Grid, LinearProgress, Paper, Rating, TextField, Typography, IconButton } from '@mui/material';
+import { Autocomplete } from '@mui/material';
 import RemoveIcon from '@mui/icons-material/Remove';
 import AddIcon from '@mui/icons-material/Add';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 
 import { CustomCard, FerramentasDeDetalhe } from '../../shared/components';
@@ -20,6 +21,7 @@ type FormData = {
 };
 
 export const DetalheDeJogos: React.FC = () => {
+  const [nomesJogos, setNomesJogos] = useState<string[]>([]);
   const { id = 'novo' } = useParams<'id'>();
   const navigate = useNavigate();
   const { showAlert, showConfirmation } = useMessageContext();
@@ -45,6 +47,17 @@ export const DetalheDeJogos: React.FC = () => {
       });
     }
   }, [id]);
+
+  useEffect(() => {
+    fetch('/imagens/jogos.json')
+      .then((res) => res.json())
+      .then((arquivos: string[]) => {
+        const nomes = arquivos.map(a => a.replace(/\.jpg$/i, ""));
+        nomes.sort((a, b) => a.localeCompare(b));
+        setNomesJogos(nomes);
+      })
+      .catch(() => setNomesJogos([]));
+  }, []);
 
   const handleNavigateBack = () => {
     if (from === 'biblioteca') {
@@ -264,20 +277,59 @@ export const DetalheDeJogos: React.FC = () => {
                       name="nome"
                       control={control}
                       rules={{ required: 'O nome é obrigatório' }}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          label="Nome do Jogo"
-                          disabled={isLoading}
-                          error={!!errors.nome}
-                          helperText={errors.nome?.message}
-                          fullWidth
-                          onChange={(e) => {
-                            field.onChange(e);
-                            setNome(e.target.value);
-                          }}
-                        />
-                      )}
+                      render={({ field }) => {
+                        const inputValue = field.value || "";
+                        const showOptions = inputValue.length >= 3;
+                        const options = showOptions
+                          ? nomesJogos.filter(n => n.toLowerCase().includes(inputValue.toLowerCase())).slice(0, 10)
+                          : [];
+                        const [open, setOpen] = useState(false);
+                        const inputRef = useRef<HTMLInputElement>(null);
+                        useEffect(() => {
+                          setOpen(showOptions && options.length > 0);
+                        }, [showOptions, options.length]);
+                        return (
+                          <Autocomplete
+                            freeSolo
+                            options={nomesJogos}
+                            inputValue={inputValue}
+                            open={open}
+                            filterOptions={(opts, state) => {
+                              const val = state.inputValue.toLowerCase();
+                              if (val.length < 3) return [];
+                              return opts.filter(n => n.toLowerCase().includes(val)).slice(0, 10);
+                            }}
+                            onInputChange={(_, newValue) => {
+                              field.onChange(newValue);
+                              setNome(newValue);
+                              setOpen(showOptions && options.length > 0);
+                            }}
+                            onChange={(_, value) => {
+                              field.onChange(value ?? "");
+                              setNome(value ?? "");
+                              setOpen(false);
+                              if (inputRef.current) inputRef.current.blur();
+                              if (value) {
+                                carregarImagensItens([{ nome: value }], 'jogos', JogosService.buscarCapaDoJogo)
+                                  .then((imgs) => {
+                                    setImagemJogo(imgs[value] || '/imagens/SemImagem.jpg');
+                                  });
+                              }
+                            }}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                inputRef={inputRef}
+                                label="Nome do Jogo"
+                                disabled={isLoading}
+                                error={!!errors.nome}
+                                helperText={errors.nome?.message}
+                                fullWidth
+                              />
+                            )}
+                          />
+                        );
+                      }}
                     />
                   </Grid>
                 </Grid>
