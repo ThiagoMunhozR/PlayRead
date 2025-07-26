@@ -104,10 +104,11 @@ export const DetalheDeLivros: React.FC = () => {
                 id: nextId, // Valor do próximo ID gerado
                 data: DataFormatada, // Data do Livro
                 nome: formData.nome, // Nome do Livro
+                avaliacao: null,
               };
 
               // Adicionar novo Livro
-              LivrosService.create(newLivro.id, newLivro.data, newLivro.nome, user?.CodigoUsuario).then((result) => {
+              LivrosService.create(newLivro.id, newLivro.data, newLivro.nome, newLivro.avaliacao, user?.CodigoUsuario).then((result) => {
                 if (result instanceof Error) {
                   showAlert(result.message, 'error');
                 } else {
