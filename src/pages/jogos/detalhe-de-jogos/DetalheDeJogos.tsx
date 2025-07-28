@@ -1,7 +1,7 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Box, Grid, LinearProgress, Paper, TextField } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 
 import { CustomCard, FerramentasDeDetalhe } from '../../../shared/components';
 import { RatingBox } from '../../../shared/components/RatingBox/RatingBox';
@@ -20,13 +20,17 @@ type FormData = {
 };
 
 export const DetalheDeJogos: React.FC = () => {
+  const formatarDataVisual = (data: string) => {
+    if (!data || data.length !== 10 || !data.includes('-')) return data;
+    const [ano, mes, dia] = data.split('-');
+    return `${dia}/${mes}/${ano}`;
+  };
   const { id = 'novo' } = useParams<'id'>();
   const navigate = useNavigate();
   const { showAlert, showConfirmation } = useMessageContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const { isMobile } = useAppThemeContext();
-  const [nome, setNome] = useState('');
   const [ClicouEmFechar, setClicouEmFechar] = useState(false);
   const { user } = useAuthContext();
   const [imagemJogo, setImagemJogo] = useState<string>('/imagens/SemImagem.jpg');
@@ -69,6 +73,11 @@ export const DetalheDeJogos: React.FC = () => {
     },
   });
 
+  const watchedNome = useWatch({ control, name: 'nome' });
+  const watchedData = useWatch({ control, name: 'data' });
+  const watchedAvaliacao = useWatch({ control, name: 'avaliacao' });
+  const watchedDataCompleto = useWatch({ control, name: 'dataCompleto' });
+
   useEffect(() => {
     if (id !== 'novo') {
       setIsLoading(true);
@@ -80,8 +89,6 @@ export const DetalheDeJogos: React.FC = () => {
           showAlert(result.message, 'error');
           handleNavigateBack();
         } else {
-          setNome(result.nome);
-
           // Converter a data de DD/MM/YYYY para YYYY-MM-DD
           const DataFormatada = result.data
             ? result.data.split('/').reverse().join('-')
@@ -107,7 +114,6 @@ export const DetalheDeJogos: React.FC = () => {
 
       // Função para formatar a data apenas se necessário
       const formatarDataParaSalvar = (DataParaFormatar: string): string => {
-        console.log(DataParaFormatar);
         if (DataParaFormatar == "-undefined-undefined" || DataParaFormatar == "") {
           return ""; // Retorna vazio se a data não for informada
         }
@@ -228,7 +234,7 @@ export const DetalheDeJogos: React.FC = () => {
 
   return (
     <LayoutBaseDePagina
-      titulo={id === 'novo' ? 'Novo jogo' : nome || 'Detalhe do jogo'}
+      titulo={id === 'novo' ? 'Novo jogo' : watchedNome || 'Detalhe do jogo'}
       barraDeFerramentas={
         <FerramentasDeDetalhe
           textoBotaoNovo='Novo'
@@ -270,8 +276,7 @@ export const DetalheDeJogos: React.FC = () => {
                           isLoading={isLoading}
                           error={!!errors.nome}
                           helperText={errors.nome?.message}
-                          onSelectNome={(nomeSelecionado) => {
-                            setNome(nomeSelecionado);
+                          onSelectNome={(nomeSelecionado) => {                          
                             carregarImagensItens([{ nome: nomeSelecionado }], 'jogos', JogosService.buscarCapaDoJogo)
                               .then((imgs) => {
                                 setImagemJogo(imgs[nomeSelecionado] || '/imagens/SemImagem.jpg');
@@ -350,10 +355,10 @@ export const DetalheDeJogos: React.FC = () => {
                   {/* CustomCard dinâmico */}
                   <CustomCard
                     imageSrc={imagemJogo}
-                    title={nome}
-                    subtitle={control._formValues?.data || ''}
-                    rating={control._formValues?.avaliacao || 0}
-                    showTrophy={!!control._formValues?.dataCompleto}
+                    title={watchedNome || ''}
+                    subtitle={formatarDataVisual(watchedData) || ''}
+                    rating={watchedAvaliacao || 0}
+                    showTrophy={!!watchedDataCompleto}
                     isMobile={false}
                   />
                 </Box>
