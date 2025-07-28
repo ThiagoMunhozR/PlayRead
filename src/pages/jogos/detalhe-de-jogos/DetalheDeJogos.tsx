@@ -232,6 +232,16 @@ export const DetalheDeJogos: React.FC = () => {
     );
   };
 
+  const getImageStyles = () => ({
+    width: '100%',
+    height: 240,
+    objectFit: 'cover',
+    borderRadius: '4px 4px 0 0',
+    boxSizing: 'border-box',
+    display: 'block',
+    boxShadow: '16px 10px 14px 0 rgba(0,0,0,0.25)'
+  });
+
   return (
     <LayoutBaseDePagina
       titulo={id === 'novo' ? 'Novo jogo' : watchedNome || 'Detalhe do jogo'}
@@ -254,7 +264,7 @@ export const DetalheDeJogos: React.FC = () => {
       <form style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <Box margin={1} display="flex" flexDirection="column" component={Paper} variant="outlined">
 
-          <Grid container spacing={2} alignItems="flex-start" padding={2}>
+          <Grid container spacing={0.1} alignItems="flex-start" padding={2}>
             <Grid item xs={12} sm={4} md={4} lg={4} xl={4}>
               <Grid container direction="column" padding={2} spacing={2}>
 
@@ -264,6 +274,21 @@ export const DetalheDeJogos: React.FC = () => {
                   </Grid>
                 )}
                 <Grid container item direction="row" spacing={2}>
+                  {isMobile && imagemJogo !== '/imagens/SemImagem.jpg' && (
+                    <Grid item xs={12} container justifyContent="center">
+                      <Box
+                        marginBottom={2}
+                        sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                      >
+                        <Box
+                          component="img"
+                          src={imagemJogo}
+                          alt=""
+                          sx={getImageStyles()}
+                        />
+                      </Box>
+                    </Grid>
+                  )}
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                     {/* Campo Nome usando componente CampoNomeJogo */}
                     <Controller
@@ -276,7 +301,7 @@ export const DetalheDeJogos: React.FC = () => {
                           isLoading={isLoading}
                           error={!!errors.nome}
                           helperText={errors.nome?.message}
-                          onSelectNome={(nomeSelecionado) => {                          
+                          onSelectNome={(nomeSelecionado) => {
                             carregarImagensItens([{ nome: nomeSelecionado }], 'jogos', JogosService.buscarCapaDoJogo)
                               .then((imgs) => {
                                 setImagemJogo(imgs[nomeSelecionado] || '/imagens/SemImagem.jpg');
@@ -342,6 +367,7 @@ export const DetalheDeJogos: React.FC = () => {
                           value={field.value || 0}
                           onChange={field.onChange}
                           isLoading={isLoading}
+                          isMobile={isMobile}
                         />
                       )}
                     />
