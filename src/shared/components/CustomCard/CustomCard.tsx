@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Box, Typography, Rating } from '@mui/material';
 import Tooltip from '@mui/material/Tooltip';
+import { ActionMenu } from '../ActionMenu/ActionMenu';
+import { useMessageContext } from '../../contexts';
+import { useNavigate } from 'react-router-dom';
+import { JogosService } from '../../services/api/jogos/JogosService';
 
 interface CustomCardProps {
   isMobile: boolean;
@@ -11,6 +15,7 @@ interface CustomCardProps {
   showTrophy?: boolean;
   cardHeight?: number;
   imageHeight?: number;
+  idEditing?: number;
 }
 
 // Função para estilos dinâmicos dos cards
@@ -62,16 +67,47 @@ export const CustomCard: React.FC<CustomCardProps> = ({
   showTrophy,
   cardHeight,
   imageHeight,
+  idEditing,
 }) => {
   const [active, setActive] = useState(false);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isMobile && active) {
+      timer = setTimeout(() => setActive(false), 5000);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isMobile, active]);
+
+  const { showAlert, showConfirmation } = useMessageContext();
+  const navigate = useNavigate();
+
+  const handleDelete = (id: number) => {
+    showConfirmation(
+      `Realmente deseja apagar ${title}?`,
+      () => {
+        JogosService.deleteById(id).then((result) => {
+          if (result instanceof Error) {
+            showAlert(result.message, 'error');
+          } else {
+            showAlert('Registro apagado com sucesso!', 'success');
+            window.location.reload();
+          }
+        });
+      },
+      () => { }
+    );
+  };
 
   // Animação de destaque
   const highlightStyles = active
     ? {
-        boxShadow: '0 0 24px 0 rgba(255, 215, 0, 0.35)',
-        border: showTrophy ? '3px solid #FFD700' : '2px solid #1976d2',
-        transition: 'box-shadow 0.3s, border 0.3s',
-      }
+      boxShadow: '0 0 24px 0 rgba(255, 215, 0, 0.35)',
+      border: showTrophy ? '3px solid #FFD700' : '2px solid #1976d2',
+      transition: 'box-shadow 0.3s, border 0.3s',
+    }
     : {};
 
   // Tooltip aparece quando ativo
@@ -82,10 +118,10 @@ export const CustomCard: React.FC<CustomCardProps> = ({
           ...getCardStyles(isMobile, cardHeight),
           ...(showTrophy
             ? {
-                border: '2px solid #FFD700',
-                boxShadow: '0 0 12px 0 rgba(255, 215, 0, 0.18)',
-                transition: 'border 0.2s, box-shadow 0.2s',
-              }
+              border: '2px solid #FFD700',
+              boxShadow: '0 0 12px 0 rgba(255, 215, 0, 0.18)',
+              transition: 'border 0.2s, box-shadow 0.2s',
+            }
             : {}),
           ...highlightStyles,
           cursor: 'pointer',
@@ -95,6 +131,7 @@ export const CustomCard: React.FC<CustomCardProps> = ({
       >
         <Box
           sx={{
+            position: 'relative',
             width: '100%',
             height: isMobile ? 300 : 420,
             display: 'flex',
@@ -112,6 +149,16 @@ export const CustomCard: React.FC<CustomCardProps> = ({
             alt=""
             sx={getImageStyles(isMobile, imageHeight)}
           />
+          {idEditing && (
+            <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 2 }}>
+              <ActionMenu
+                isMobile={true}
+                IsContrast={true}
+                onEdit={() => navigate(`/jogos/detalhe/${idEditing}`, { state: { from: 'biblioteca' } })}
+                onDelete={() => handleDelete(idEditing)}
+              />
+            </Box>
+          )}
         </Box>
         <CardContent
           sx={{

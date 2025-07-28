@@ -5,9 +5,10 @@ interface IActionMenuProps {
   isMobile: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  IsContrast?: boolean;
 }
 
-export const ActionMenu: React.FC<IActionMenuProps> = ({ isMobile, onEdit, onDelete }) => {
+export const ActionMenu: React.FC<IActionMenuProps> = ({ isMobile, onEdit, onDelete, IsContrast = false }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -21,7 +22,9 @@ export const ActionMenu: React.FC<IActionMenuProps> = ({ isMobile, onEdit, onDel
     return (
       <>
         <IconButton size="small" onClick={handleMenuOpen}>
-          <Icon>more_vert</Icon>
+          <Icon
+            sx={IsContrast ? { WebkitTextStroke: '1px black', color: 'white' } : {}}
+          >more_vert</Icon>
         </IconButton>
         <Menu
           anchorEl={anchorEl}

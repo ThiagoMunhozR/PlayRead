@@ -56,9 +56,9 @@ export const ListagemDeJogo: React.FC = () => {
         setPaginationModel((prev) => ({ ...prev, page: 0 })); // Sempre volta para a primeira página ao buscar
     }, [busca, rows]);
 
-    const handleDelete = (id: number) => {
+    const handleDelete = (id: number, nome: string) => {
         showConfirmation(
-            'Realmente deseja apagar?',
+            `Realmente deseja apagar ${nome}?`,
             () => {
                 JogosService.deleteById(id).then((result) => {
                     if (result instanceof Error) {
@@ -87,7 +87,7 @@ export const ListagemDeJogo: React.FC = () => {
                 <ActionMenu
                     isMobile={isMobile}
                     onEdit={() => navigate(`/jogos/detalhe/${params.row.id}`)}
-                    onDelete={() => handleDelete(params.row.id)}
+                    onDelete={() => handleDelete(params.row.id, params.row.nome)}
                 />
             ),
         },
