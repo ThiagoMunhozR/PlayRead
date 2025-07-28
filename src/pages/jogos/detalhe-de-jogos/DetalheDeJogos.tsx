@@ -1,16 +1,15 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Box, Grid, LinearProgress, Paper, Rating, TextField, Typography, IconButton } from '@mui/material';
-import { Autocomplete } from '@mui/material';
-import RemoveIcon from '@mui/icons-material/Remove';
-import AddIcon from '@mui/icons-material/Add';
-import { useEffect, useRef, useState } from 'react';
+import { Box, Grid, LinearProgress, Paper, TextField } from '@mui/material';
+import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 
-import { CustomCard, FerramentasDeDetalhe } from '../../shared/components';
-import { LayoutBaseDePagina } from '../../shared/layouts';
-import { JogosService } from '../../shared/services/api/jogos/JogosService';
-import { useAppThemeContext, useAuthContext, useMessageContext } from '../../shared/contexts';
-import { carregarImagensItens } from '../../shared/utils/carregarImagensItens';
+import { CustomCard, FerramentasDeDetalhe } from '../../../shared/components';
+import { RatingBox } from '../../../shared/components/RatingBox/RatingBox';
+import { LayoutBaseDePagina } from '../../../shared/layouts';
+import { JogosService } from '../../../shared/services/api/jogos/JogosService';
+import { useAppThemeContext, useAuthContext, useMessageContext } from '../../../shared/contexts';
+import { carregarImagensItens } from '../../../shared/utils/carregarImagensItens';
+import { CampoNomeJogo } from './components';
 
 type FormData = {
   id?: number;
@@ -21,7 +20,6 @@ type FormData = {
 };
 
 export const DetalheDeJogos: React.FC = () => {
-  const [nomesJogos, setNomesJogos] = useState<string[]>([]);
   const { id = 'novo' } = useParams<'id'>();
   const navigate = useNavigate();
   const { showAlert, showConfirmation } = useMessageContext();
@@ -47,17 +45,6 @@ export const DetalheDeJogos: React.FC = () => {
       });
     }
   }, [id]);
-
-  useEffect(() => {
-    fetch('/imagens/jogos.json')
-      .then((res) => res.json())
-      .then((arquivos: string[]) => {
-        const nomes = arquivos.map(a => a.replace(/\.jpg$/i, ""));
-        nomes.sort((a, b) => a.localeCompare(b));
-        setNomesJogos(nomes);
-      })
-      .catch(() => setNomesJogos([]));
-  }, []);
 
   const handleNavigateBack = () => {
     if (from === 'biblioteca') {
@@ -272,70 +259,32 @@ export const DetalheDeJogos: React.FC = () => {
                 )}
                 <Grid container item direction="row" spacing={2}>
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                    {/* Campo Nome */}
+                    {/* Campo Nome usando componente CampoNomeJogo */}
                     <Controller
                       name="nome"
                       control={control}
                       rules={{ required: 'O nome é obrigatório' }}
-                      render={({ field }) => {
-                        const inputValue = field.value || "";
-                        const showOptions = inputValue.length >= 3;
-                        const options = showOptions
-                          ? nomesJogos.filter(n => n.toLowerCase().includes(inputValue.toLowerCase())).slice(0, 10)
-                          : [];
-                        const [open, setOpen] = useState(false);
-                        const inputRef = useRef<HTMLInputElement>(null);
-                        useEffect(() => {
-                          setOpen(showOptions && options.length > 0);
-                        }, [showOptions, options.length]);
-                        return (
-                          <Autocomplete
-                            freeSolo
-                            options={nomesJogos}
-                            inputValue={inputValue}
-                            open={open}
-                            filterOptions={(opts, state) => {
-                              const val = state.inputValue.toLowerCase();
-                              if (val.length < 3) return [];
-                              return opts.filter(n => n.toLowerCase().includes(val)).slice(0, 10);
-                            }}
-                            onInputChange={(_, newValue) => {
-                              field.onChange(newValue);
-                              setNome(newValue);
-                              setOpen(showOptions && options.length > 0);
-                            }}
-                            onChange={(_, value) => {
-                              field.onChange(value ?? "");
-                              setNome(value ?? "");
-                              setOpen(false);
-                              if (inputRef.current) inputRef.current.blur();
-                              if (value) {
-                                carregarImagensItens([{ nome: value }], 'jogos', JogosService.buscarCapaDoJogo)
-                                  .then((imgs) => {
-                                    setImagemJogo(imgs[value] || '/imagens/SemImagem.jpg');
-                                  });
-                              }
-                            }}
-                            renderInput={(params) => (
-                              <TextField
-                                {...params}
-                                inputRef={inputRef}
-                                label="Nome do Jogo"
-                                disabled={isLoading}
-                                error={!!errors.nome}
-                                helperText={errors.nome?.message}
-                                fullWidth
-                              />
-                            )}
-                          />
-                        );
-                      }}
+                      render={({ field }) => (
+                        <CampoNomeJogo
+                          field={field}
+                          isLoading={isLoading}
+                          error={!!errors.nome}
+                          helperText={errors.nome?.message}
+                          onSelectNome={(nomeSelecionado) => {
+                            setNome(nomeSelecionado);
+                            carregarImagensItens([{ nome: nomeSelecionado }], 'jogos', JogosService.buscarCapaDoJogo)
+                              .then((imgs) => {
+                                setImagemJogo(imgs[nomeSelecionado] || '/imagens/SemImagem.jpg');
+                              });
+                          }}
+                        />
+                      )}
                     />
                   </Grid>
                 </Grid>
 
                 <Grid container item direction="row" spacing={2}>
-                  <Grid item xs={12} sm={6} md={6} lg={6} xl={6}>
+                  <Grid item xs={12} sm={12} md={12} lg={6} xl={6}>
                     {/* Campo Data */}
                     <Controller
                       name="data"
@@ -358,7 +307,7 @@ export const DetalheDeJogos: React.FC = () => {
                       )}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6} md={6} lg={6} xl={6}>
+                  <Grid item xs={12} sm={12} md={12} lg={6} xl={6}>
                     {/* Campo Data Completo (opcional) */}
                     <Controller
                       name="dataCompleto"
@@ -380,69 +329,23 @@ export const DetalheDeJogos: React.FC = () => {
 
                 <Grid container item direction="row" spacing={2}>
                   <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                    <Box component={Paper} elevation={0} sx={{ p: 2, borderRadius: 2, width: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', border: '2px solid', borderColor: 'divider' }}>
-                      <Typography variant="body1" mb={1} align="center">Avaliação</Typography>
-                      <Controller
-                        name="avaliacao"
-                        control={control}
-                        render={({ field }) => (
-                          <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                            <IconButton
-                              aria-label="Diminuir meia estrela"
-                              onClick={() => field.onChange(Math.max(0, (field.value || 0) - 0.25))}
-                              disabled={isLoading || (field.value || 0) <= 0}
-                              sx={{
-                                color: 'white',
-                                opacity: 0.5,
-                                p: 0.2,
-                                background: 'none',
-                                border: 'none',
-                                boxShadow: 'none',
-                                outline: 'none',
-                                '&:hover': { background: 'none', opacity: 0.8 },
-                                '&:focus': { background: 'none', boxShadow: 'none', outline: 'none' },
-                                '&:active': { background: 'none', boxShadow: 'none', outline: 'none' },
-                              }}
-                            >
-                              <RemoveIcon fontSize="small" />
-                            </IconButton>
-                            <Rating
-                              {...field}
-                              precision={0.25}
-                              value={field.value || 0}
-                              onChange={(_, value) => field.onChange(value)}
-                              disabled={isLoading}
-                              size="large"
-                            />
-                            <IconButton
-                              aria-label="Aumentar meia estrela"
-                              onClick={() => field.onChange(Math.min(5, (field.value || 0) + 0.25))}
-                              disabled={isLoading || (field.value || 0) >= 5}
-                              sx={{
-                                color: 'white',
-                                opacity: 0.5,
-                                p: 0.2,
-                                background: 'none',
-                                border: 'none',
-                                boxShadow: 'none',
-                                outline: 'none',
-                                '&:hover': { background: 'none', opacity: 0.8 },
-                                '&:focus': { background: 'none', boxShadow: 'none', outline: 'none' },
-                                '&:active': { background: 'none', boxShadow: 'none', outline: 'none' },
-                              }}
-                            >
-                              <AddIcon fontSize="small" />
-                            </IconButton>
-                          </Box>
-                        )}
-                      />
-                    </Box>
+                    <Controller
+                      name="avaliacao"
+                      control={control}
+                      render={({ field }) => (
+                        <RatingBox
+                          value={field.value || 0}
+                          onChange={field.onChange}
+                          isLoading={isLoading}
+                        />
+                      )}
+                    />
                   </Grid>
                 </Grid>
               </Grid>
             </Grid>
             {!isMobile && (
-              <Grid item xs={12} sm={6} md={4} lg={2} xl={2}>
+              <Grid item xs={12} sm={4.5} md={4.5} lg={2.5} xl={2.5}>
                 <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                   {/* CustomCard dinâmico */}
                   <CustomCard
@@ -457,7 +360,7 @@ export const DetalheDeJogos: React.FC = () => {
               </Grid>
             )}
             {/* Coluna 3: Vazia */}
-            <Grid item xs={12} sm={4} md={4} lg={2} xl={2}>
+            <Grid item xs={12} sm={1} md={2} lg={1} xl={1}>
               <Box sx={{ width: '100%', height: '100%' }} />
             </Grid>
           </Grid>
