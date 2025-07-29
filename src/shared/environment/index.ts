@@ -1,5 +1,9 @@
 export const Environment = {
     /**
+     * Dados do usuário no localStorage
+     */
+    LOCAL_STORAGE_KEY__USER: 'APP_USER',
+    /**
      * Define a quantidade de linhas a ser carregada por padrão nas listagens
      */
     LIMITE_DE_LINHAS: 20,

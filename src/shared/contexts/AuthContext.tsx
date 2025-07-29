@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { AuthService } from '../services/api/auth/AuthService';
+import { Environment } from '../environment';
 
 // Define a interface para o contexto de autenticação
 interface IAuthContextData {
@@ -7,6 +8,7 @@ interface IAuthContextData {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<string | void>;
   user: IUsuario | null;
+  setUser?: (user: IUsuario | null) => void;
 }
 
 // Definindo a interface do usuário, com base nos dados retornados pelo Supabase
@@ -21,7 +23,7 @@ interface IUsuario {
 const AuthContext = createContext({} as IAuthContextData);
 
 const LOCAL_STORAGE_KEY__ACCESS_TOKEN = 'APP_ACCESS_TOKEN';
-const LOCAL_STORAGE_KEY__USER = 'APP_USER';
+const LOCAL_STORAGE_KEY__USER = Environment.LOCAL_STORAGE_KEY__USER;
 
 interface IAuthProviderProps {
   children: React.ReactNode;
@@ -69,7 +71,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
   const isAuthenticated = useMemo(() => !!accessToken, [accessToken]);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login: handleLogin, logout: handleLogout, user }}>
+    <AuthContext.Provider value={{ isAuthenticated, login: handleLogin, logout: handleLogout, user, setUser }}>
       {children}
     </AuthContext.Provider>
   );

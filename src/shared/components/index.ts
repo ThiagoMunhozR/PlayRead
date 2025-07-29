@@ -6,3 +6,4 @@ export * from './login/Login';
 export * from './ActionMenu/ActionMenu';
 export * from './CustomCard/CustomCard';
 export * from './CustomCard/CustomCardList';
+export * from './FormUser/FormUser'

@@ -1,3 +1,4 @@
+export * from './configurações/Configuracoes';
 export * from './jogos/BibliotecaDeJogos';
 export * from './jogos/detalhe-de-jogos/DetalheDeJogos';
 export * from './jogos/ListagemDeJogos';

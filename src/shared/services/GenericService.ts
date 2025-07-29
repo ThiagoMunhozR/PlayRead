@@ -70,12 +70,12 @@ export const GenericService = {
     }
   },
 
-  async getById<T = any>(table: string, id: number): Promise<T | Error> {
+  async getById<T = any>(table: string, id: number, field: string = 'id'): Promise<T | Error> {
     try {
       const { data, error } = await supabase
         .from(table)
         .select('*')
-        .eq('id', id)
+        .eq(field, id)
         .single();
       if (error) throw new Error(error.message || 'Erro ao consultar o registro.');
       return data as T;
@@ -102,13 +102,13 @@ export const GenericService = {
     }
   },
 
-  async updateById<T = any>(table: string, id: number, dados: T): Promise<void | Error> {
+  async updateById<T = any>(table: string, id: number, dados: T, field: string = 'id'): Promise<void | Error> {
     if (!id) return new Error('ID inválido para a atualização');
     try {
       const { error } = await supabase
         .from(table)
         .update(dados)
-        .eq('id', id);
+        .eq(field, id);
       if (error) throw new Error(error.message || 'Erro ao atualizar o registro.');
     } catch (error) {
       console.error(error);

@@ -1,5 +1,6 @@
 import { Environment } from '../../../environment';
 import { createClient } from '@supabase/supabase-js';
+import { GenericService } from '../../GenericService';
 
 const supabase = createClient(Environment.SUPABASE_URL, Environment.SUPABASE_KEY);
 
@@ -12,10 +13,24 @@ interface IUsuario {
     Email: string;
 }
 
+interface IUsuarioEdit {
+    Gamertag: string;
+    Nome: string;
+}
+
 interface IAuth {
     accessToken: string;
     user: IUsuario;
 }
+
+const updateById = async (id: number, dados: IUsuarioEdit): Promise<void | Error> => {
+  return await GenericService.updateById<IUsuarioEdit>('usuarios', id, dados, 'CodigoUsuario');
+};
+
+const getById = async (id: number): Promise<IUsuarioEdit | Error> => {
+  return await GenericService.getById<IUsuarioEdit>('usuarios', id, 'CodigoUsuario');
+};
+
 
 const auth = async (email: string, password: string): Promise<IAuth | Error> => {
     try {
@@ -64,4 +79,6 @@ const auth = async (email: string, password: string): Promise<IAuth | Error> => 
 
 export const AuthService = {
     auth,
+    updateById,
+    getById,
 };
