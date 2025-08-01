@@ -76,9 +76,35 @@ const auth = async (email: string, password: string): Promise<IAuth | Error> => 
     }
 };
 
+const loginWithSupabaseUser = async (user: any): Promise<IUsuario | Error> => {
+    try {
+        if (!user?.email) {
+            throw new Error('Usuário do Supabase sem e-mail.');
+        }
+        const { data: usuarioData, error: fetchError } = await supabase
+            .from('usuarios')
+            .select('CodigoUsuario, Gamertag, FotoURL, Nome, Email')
+            .eq('Email', user.email)
+            .maybeSingle();
+        if (fetchError) {
+            throw new Error(`Erro ao buscar dados do usuário: ${fetchError.message}`);
+        }
+        if (!usuarioData) {
+            throw new Error('Usuário não encontrado na tabela "usuarios".');
+        }
+        return usuarioData;
+    } catch (error) {
+        console.error('Erro no loginWithSupabaseUser:', error);
+        return new Error(
+            error instanceof Error ? error.message : 'Erro inesperado ao buscar dados do usuário.'
+        );
+    }
+};
+
 
 export const AuthService = {
     auth,
     updateById,
     getById,
+    loginWithSupabaseUser,
 };
