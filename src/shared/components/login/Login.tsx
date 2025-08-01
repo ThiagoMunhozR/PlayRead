@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Box, Button, Card, CardActions, CardContent, CircularProgress, TextField, Typography } from '@mui/material';
 import { useAuthContext } from '../../contexts';
+import { createClient } from '@supabase/supabase-js';
+import { Environment } from '../../environment';
 import { ModalCriarLogin } from './components/ModalCriarLogin';
 
 interface ILoginProps {
@@ -16,20 +18,25 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [openModal, setOpenModal] = useState(false);
-  const [registerData, setRegisterData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    name: '',
-    gamertag: '',
-  });
-  const [registerErrors, setRegisterErrors] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    name: '',
-    gamertag: '',
-  });
+
+  const supabase = createClient(Environment.SUPABASE_URL, Environment.SUPABASE_KEY);
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setEmailError('Informe o e-mail para receber link de acesso');
+      return;
+    }
+    const { error } = await supabase.auth.signInWithOtp({ email });
+    if (error) {
+      if (error.code === 'validation_failed' && error.message?.includes('invalid format')) {
+        setEmailError('O e-mail informado não é válido.');
+      } else {
+        setEmailError('Erro ao solicitar link de acesso: ' + (error.message || ''));
+      }
+    } else {
+      setEmailError('Enviamos um link de acesso para seu e-mail.');
+    }
+  };
+
 
   const handleLoginSubmit = () => {
     setIsLoading(true);
@@ -58,10 +65,19 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
     if (valid) {
       login(email, password)
         .then(() => setIsLoading(false))
-        .catch(() => {
+        .catch((error) => {
+          console.error('Login failed:', error);
           setIsLoading(false);
-          setEmailError('Não foi possível fazer login, revise o email');
-          setPasswordError('Não foi possível fazer login, revise a senha');
+          if (error?.code === 'invalid_credentials' || error?.message === 'Invalid login credentials') {
+            setEmailError('Não foi possível fazer login, revise o email');
+            setPasswordError('Não foi possível fazer login, revise a senha');
+          } else if (error?.code === 'email_not_confirmed' || error?.message === 'Email not confirmed') {
+            setEmailError('Você precisa confirmar seu email, antes do login');
+            setPasswordError('');
+          } else {
+            setEmailError('Erro ao fazer login.');
+            setPasswordError('');
+          }
         });
     } else {
       setIsLoading(false);
@@ -69,20 +85,6 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
   };
 
   const handleModalClose = () => {
-    setRegisterErrors({
-      email: '',
-      password: '',
-      confirmPassword: '',
-      name: '',
-      gamertag: '',
-    });
-    setRegisterData({
-      email: '',
-      password: '',
-      confirmPassword: '',
-      name: '',
-      gamertag: '',
-    });
     setOpenModal(false);
   }
 
@@ -145,6 +147,15 @@ const clearPasswordError = () => {
               helperText={passwordError || ''}
               onChange={(e) => {setPassword(e.target.value); clearPasswordError();}}
             />
+            <Button
+              variant="text"
+              color="primary"
+              sx={{ alignSelf: 'flex-end', textTransform: 'none', fontWeight: 400, fontSize: 15, mb: 1, mt: -1 }}
+              disabled={isLoading}
+              onClick={handleForgotPassword}
+            >
+              Esqueci a senha
+            </Button>
           </Box>
         </CardContent>
 
@@ -176,10 +187,6 @@ const clearPasswordError = () => {
         onClose={handleModalClose}
         isLoading={isLoading}
         setIsLoading={setIsLoading}
-        registerData={registerData}
-        setRegisterData={setRegisterData}
-        registerErrors={registerErrors}
-        setRegisterErrors={setRegisterErrors}
       />
     </Box>
   );

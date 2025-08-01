@@ -131,9 +131,6 @@ export const FormUser: React.FC<FormUserProps> = ({ control, errors, isLoading =
           </Tooltip>
         </InputAdornment>
       ),
-      placeholder: '******',
-      value: '******',
-      readOnly: true,
     };
   }
 
@@ -189,11 +186,14 @@ export const FormUser: React.FC<FormUserProps> = ({ control, errors, isLoading =
                 <Controller
                   name="email"
                   control={control}
+                  rules={!editUser ? { required: 'O e-mail é obrigatório' } : {}}
                   render={({ field }) => (
                     <TextField
                       {...field}
                       label="E-mail"
-                      disabled={true}
+                      disabled={editUser}
+                      error={!!errors.email}
+                      helperText={errors.email?.message}
                       fullWidth
                     />
                   )}

@@ -7,7 +7,9 @@ interface IMessageContextData {
   showConfirmation: (
     message: string,
     onConfirm: () => void,
-    onCancel?: () => void
+    onCancel?: () => void,
+    confirmLabel?: string,
+    showCancel?: boolean
   ) => void;
 }
 
@@ -34,6 +36,8 @@ export const AlertProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [confirmationMessage, setConfirmationMessage] = useState('');
   const [onConfirmAction, setOnConfirmAction] = useState<() => void>(() => () => { });
   const [onCancelAction, setOnCancelAction] = useState<() => void>(() => () => { });
+  const [confirmLabel, setConfirmLabel] = useState<string>('SIM');
+  const [showCancel, setShowCancel] = useState<boolean>(true);
 
   // Functions to show alert
   const showAlert = (message: string, severity: AlertColor = 'info') => {
@@ -48,8 +52,16 @@ export const AlertProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   // Functions to show confirmation dialog
-  const showConfirmation = (message: string, onConfirm: () => void, onCancel?: () => void) => {
+  const showConfirmation = (
+    message: string,
+    onConfirm: () => void,
+    onCancel?: () => void,
+    confirmLabelParam: string = 'SIM',
+    showCancelParam: boolean = true
+  ) => {
     setConfirmationMessage(message);
+    setConfirmLabel(confirmLabelParam ?? 'SIM');
+    setShowCancel(showCancelParam ?? true);
     setOnConfirmAction(() => () => {
       onConfirm();
       setConfirmationOpen(false);
@@ -101,14 +113,16 @@ export const AlertProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       >
         <DialogTitle id="confirmation-dialog-title" sx={{ paddingBottom: 2 }}>{confirmationMessage}</DialogTitle>
         <DialogActions>
-          <Button onClick={onCancelAction} color="primary" variant='outlined'>
-            <Typography variant='button' whiteSpace="nowrap" textOverflow="ellipsis" overflow="hidden">
-              NÃO
-            </Typography>
-          </Button>
+          {showCancel && (
+            <Button onClick={onCancelAction} color="primary" variant='outlined'>
+              <Typography variant='button' whiteSpace="nowrap" textOverflow="ellipsis" overflow="hidden">
+                NÃO
+              </Typography>
+            </Button>
+          )}
           <Button onClick={onConfirmAction} color="primary" variant="contained" autoFocus>
             <Typography variant='button' whiteSpace="nowrap" textOverflow="ellipsis" overflow="hidden">
-              SIM
+              {confirmLabel}
             </Typography>
           </Button>
         </DialogActions>
