@@ -78,8 +78,8 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const handleLogout = useCallback(() => {
-    supabase.auth.signOut();
+  const handleLogout = useCallback(async () => {
+    await supabase.auth.signOut();
     localStorage.removeItem(LOCAL_STORAGE_KEY__ACCESS_TOKEN);
     localStorage.removeItem(LOCAL_STORAGE_KEY__USER);
 
