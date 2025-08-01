@@ -22,6 +22,9 @@ export const BibliotecaDeJogos = () => {
   const layoutRef = useRef<ILayoutBaseDePaginaHandle>(null);
   const [ordem, setOrdem] = useState<OrdemType>(() => localStorage.getItem('biblioteca-jogos-ordem') as OrdemType || 'data');
   const [direcao, setDirecao] = useState<DirecaoType>(() => localStorage.getItem('biblioteca-jogos-direcao') as DirecaoType || 'desc');
+  const [reloadFlag, setReloadFlag] = useState(0);
+
+  const recarregarJogos = () => setReloadFlag(flag => flag + 1);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const pagina = useMemo(() => Number(searchParams.get('pagina') || '1'), [searchParams]);
@@ -29,7 +32,7 @@ export const BibliotecaDeJogos = () => {
 
   useEffect(() => {
     consultaRealizada.current = false;
-  }, [pagina, busca, ordem, direcao]);
+  }, [pagina, busca, ordem, direcao, reloadFlag]);
 
   useEffect(() => {
     if (!consultaRealizada.current && user?.CodigoUsuario) {
@@ -49,10 +52,9 @@ export const BibliotecaDeJogos = () => {
         });
       consultaRealizada.current = true;
     }
-  }, [user?.CodigoUsuario, pagina, busca, ordem, direcao]);
+  }, [user?.CodigoUsuario, pagina, busca, ordem, direcao, reloadFlag]);
 
-
-  // Carregar as imagens dos jogos (utilitário genérico)
+  // Carregar as imagens dos jogos
   useEffect(() => {
     if (jogos.length > 0) {
       carregarImagensItens(jogos, 'jogos', JogosService.buscarCapaDoJogo)
@@ -106,6 +108,7 @@ export const BibliotecaDeJogos = () => {
             setSearchParams({ busca, pagina: newPage.toString() }, { replace: true });
             layoutRef.current?.scrollToTop();
           }}
+          onDeleted={recarregarJogos}
         />
       </Box>
     </LayoutBaseDePagina>

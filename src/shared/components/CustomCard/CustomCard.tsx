@@ -16,6 +16,7 @@ interface CustomCardProps {
   cardHeight?: number;
   imageHeight?: number;
   idEditing?: number;
+  onDeleted?: () => void;
 }
 
 // Função para estilos dinâmicos dos cards
@@ -68,6 +69,7 @@ export const CustomCard: React.FC<CustomCardProps> = ({
   cardHeight,
   imageHeight,
   idEditing,
+  onDeleted,
 }) => {
   const [active, setActive] = useState(false);
 
@@ -93,7 +95,7 @@ export const CustomCard: React.FC<CustomCardProps> = ({
             showAlert(result.message, 'error');
           } else {
             showAlert('Registro apagado com sucesso!', 'success');
-            window.location.reload();
+            if (typeof onDeleted === 'function') onDeleted();
           }
         });
       },

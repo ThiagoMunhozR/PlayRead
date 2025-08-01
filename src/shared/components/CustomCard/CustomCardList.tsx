@@ -17,6 +17,7 @@ interface CustomCardListProps {
   limitPerPage?: number;
   onPageChange?: (newPage: number) => void;
   isLoading?: boolean;
+  onDeleted?: () => void;
 }
 
 export const CustomCardList: React.FC<CustomCardListProps> = ({
@@ -28,6 +29,7 @@ export const CustomCardList: React.FC<CustomCardListProps> = ({
   limitPerPage = 25,
   onPageChange,
   isLoading = false,
+  onDeleted,
 }) => {
   return (
     <>
@@ -76,6 +78,7 @@ export const CustomCardList: React.FC<CustomCardListProps> = ({
               rating={item.rating}
               showTrophy={item.showTrophy}
               idEditing={typeof item.id === 'number' ? item.id : undefined}
+              onDeleted={onDeleted}
             />
           </Grid>
         ))}
