@@ -69,7 +69,13 @@ export const MenuLateral: React.FC<IMenuLateralProps> = ({ children }) => {
                     <Icon>dark_mode</Icon>
                   </ListItemIcon>
                 </ListItemButton>
-              <ListItemButton onClick={() => navigate('/configuracoes')} sx={{ minWidth: 0, width: 48, justifyContent: 'center' }}>
+              <ListItemButton
+                onClick={() => {
+                  navigate('/configuracoes');
+                  if (mdDown) toggleDrawerOpen();
+                }}
+                sx={{ minWidth: 0, width: 48, justifyContent: 'center' }}
+              >
                 <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>
                   <Icon>settings</Icon>
                 </ListItemIcon>
