@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { AuthService } from '../services/api/auth/AuthService';
 import { Environment } from '../environment';
+import { supabase } from '../services/api/axios-config';
 
 // Define a interface para o contexto de autenticação
 interface IAuthContextData {
@@ -9,6 +10,7 @@ interface IAuthContextData {
   login: (email: string, password: string) => Promise<string | void>;
   user: IUsuario | null;
   setUser?: (user: IUsuario | null) => void;
+  handleLinkMagic?: () => Promise<void>;
 }
 
 // Definindo a interface do usuário, com base nos dados retornados pelo Supabase
@@ -60,7 +62,24 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     }
   }, []);
 
+  const handleLinkMagic = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const usuario = await AuthService.loginWithSupabaseUser(session.user);
+      if (!(usuario instanceof Error)) {
+        localStorage.setItem(LOCAL_STORAGE_KEY__ACCESS_TOKEN, JSON.stringify(session.access_token));
+        localStorage.setItem(LOCAL_STORAGE_KEY__USER, JSON.stringify(usuario));
+        setAccessToken(session.access_token);
+        setUser(usuario);
+      } else {
+        localStorage.removeItem(LOCAL_STORAGE_KEY__USER);
+        setUser(null);
+      }
+    }
+  }, []);
+
   const handleLogout = useCallback(() => {
+    supabase.auth.signOut();
     localStorage.removeItem(LOCAL_STORAGE_KEY__ACCESS_TOKEN);
     localStorage.removeItem(LOCAL_STORAGE_KEY__USER);
 
@@ -71,7 +90,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
   const isAuthenticated = useMemo(() => !!accessToken, [accessToken]);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login: handleLogin, logout: handleLogout, user, setUser }}>
+    <AuthContext.Provider value={{ isAuthenticated, login: handleLogin, logout: handleLogout, user, setUser, handleLinkMagic }}>
       {children}
     </AuthContext.Provider>
   );

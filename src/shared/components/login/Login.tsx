@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Button, Card, CardActions, CardContent, CircularProgress, TextField, Typography } from '@mui/material';
-import { useAuthContext } from '../../contexts';
+import { useAuthContext, useMessageContext } from '../../contexts';
 import { createClient } from '@supabase/supabase-js';
 import { Environment } from '../../environment';
 import { ModalCriarLogin } from './components/ModalCriarLogin';
@@ -10,7 +10,12 @@ interface ILoginProps {
 }
 
 export const Login: React.FC<ILoginProps> = ({ children }) => {
-  const { isAuthenticated, login } = useAuthContext();
+  const { isAuthenticated, login, handleLinkMagic } = useAuthContext();
+  useEffect(() => {
+    if (!isAuthenticated && handleLinkMagic) {
+      handleLinkMagic();
+    }
+  }, [isAuthenticated, handleLinkMagic]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [passwordError, setPasswordError] = useState('');
@@ -18,13 +23,15 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [openModal, setOpenModal] = useState(false);
-
+  const { showConfirmation } = useMessageContext();
   const supabase = createClient(Environment.SUPABASE_URL, Environment.SUPABASE_KEY);
+ 
   const handleForgotPassword = async () => {
     if (!email) {
       setEmailError('Informe o e-mail para receber link de acesso');
       return;
     }
+    setIsLoading(true);
     const { error } = await supabase.auth.signInWithOtp({ email });
     if (error) {
       if (error.code === 'validation_failed' && error.message?.includes('invalid format')) {
@@ -33,8 +40,15 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
         setEmailError('Erro ao solicitar link de acesso: ' + (error.message || ''));
       }
     } else {
-      setEmailError('Enviamos um link de acesso para seu e-mail.');
+      showConfirmation(
+        'Enviamos um link de acesso para seu e-mail.',
+        () => { },
+        () => { },
+        'OK',
+        false
+      );
     }
+    setIsLoading(false);
   };
 
 
@@ -42,7 +56,6 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
     setIsLoading(true);
     let valid = true;
 
-    // Reset errors
     setEmailError('');
     setPasswordError('');
 
@@ -90,23 +103,23 @@ export const Login: React.FC<ILoginProps> = ({ children }) => {
 
   const clearEmailError = () => {
     if (emailError) {
-        if (emailError == 'Não foi possível fazer login, revise o email') {
-            setEmailError('');
-            setPasswordError('');
-        }
-        setEmailError(''); 
-    }
-}
-
-const clearPasswordError = () => {
-    if (passwordError) {
-        if (passwordError == 'Não foi possível fazer login, revise a senha') {
-            setPasswordError('');
-            setEmailError('');
-        }
+      if (emailError == 'Não foi possível fazer login, revise o email') {
+        setEmailError('');
         setPasswordError('');
+      }
+      setEmailError('');
     }
-}
+  }
+
+  const clearPasswordError = () => {
+    if (passwordError) {
+      if (passwordError == 'Não foi possível fazer login, revise a senha') {
+        setPasswordError('');
+        setEmailError('');
+      }
+      setPasswordError('');
+    }
+  }
 
   if (isAuthenticated) return <>{children}</>;
 
@@ -134,7 +147,7 @@ const clearPasswordError = () => {
               disabled={isLoading}
               error={!!emailError}
               helperText={emailError || ''}
-              onChange={(e) => {setEmail(e.target.value); clearEmailError();}}
+              onChange={(e) => { setEmail(e.target.value); clearEmailError(); }}
             />
 
             <TextField
@@ -145,7 +158,7 @@ const clearPasswordError = () => {
               disabled={isLoading}
               error={!!passwordError}
               helperText={passwordError || ''}
-              onChange={(e) => {setPassword(e.target.value); clearPasswordError();}}
+              onChange={(e) => { setPassword(e.target.value); clearPasswordError(); }}
             />
             <Button
               variant="text"
