@@ -81,7 +81,12 @@ export const MenuLateral: React.FC<IMenuLateralProps> = ({ children }) => {
                 </ListItemIcon>
               </ListItemButton>
               </List>           
-              <ListItemButton onClick={logout} sx={{ justifyContent: 'center' }}>
+              <ListItemButton 
+                onClick={() => {
+                  logout();
+                  if (mdDown) toggleDrawerOpen();
+                }} 
+                sx={{ justifyContent: 'center' }}>
                 <Box display="flex" flexDirection="row" alignItems="center" justifyContent="center" width="100%">
                   <Icon sx={{ mr: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>logout</Icon>
                   <Typography sx={{ textAlign: 'center', m: 0, p: 0 }}>
