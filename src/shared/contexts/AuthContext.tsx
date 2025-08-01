@@ -82,7 +82,12 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     await supabase.auth.signOut();
     localStorage.removeItem(LOCAL_STORAGE_KEY__ACCESS_TOKEN);
     localStorage.removeItem(LOCAL_STORAGE_KEY__USER);
-
+    // Limpa todas as chaves do Supabase (sb-)
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
     setAccessToken(undefined);
     setUser(null);
   }, []);
