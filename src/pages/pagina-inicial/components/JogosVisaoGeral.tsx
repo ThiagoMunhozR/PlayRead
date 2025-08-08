@@ -1,6 +1,5 @@
 import { Box, Stack, Typography, useTheme, Grid, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { useAppThemeContext } from '../../../shared/contexts';
 import { useMemo, useState } from 'react';
 import { BarChart } from '@mui/x-charts';
 import { JogosZeradosMes } from './JogosZeradosMês';
@@ -11,7 +10,6 @@ interface JogosVisaoGeralProps {
 }
 
 export const JogosVisaoGeral: React.FC<JogosVisaoGeralProps> = ({ games, totalCount }) => {
-    const { isMobile } = useAppThemeContext();
     const theme = useTheme();
     const [anoSelecionado, setAnoSelecionado] = useState<string | null>(null);
 
