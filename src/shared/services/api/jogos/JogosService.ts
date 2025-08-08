@@ -18,7 +18,7 @@ export interface IDetalheJogo {
   CodigoUsuario: number | undefined;
 }
 
-type TJogosComTotalCount = {
+export type TJogosComTotalCount = {
   data: IListagemJogo[];
   totalCount: number;
 }
@@ -112,7 +112,7 @@ const getUltimoRegistroJogos = async (tableName: string): Promise<number | Error
 const buscarCapaDoJogo = async (nomeJogo: string): Promise<string> => {
   const imageKey = encodeURIComponent(nomeJogo);
   const cachedImage = localStorage.getItem(imageKey);
-  
+
   if (cachedImage) {
     console.log('Imagem encontrada no cache:', nomeJogo);
     return cachedImage;
@@ -124,10 +124,10 @@ const buscarCapaDoJogo = async (nomeJogo: string): Promise<string> => {
       const data = await response.json();
 
       if (data.items && data.items.length > 0) {
-        
+
         for (const item of data.items) {
           try {
-            if (item.image.height > item.image.width) {             
+            if (item.image.height > item.image.width) {
               const imageUrl = item.link;
               const compressedImage = await compressImage(imageUrl);
               localStorage.setItem(imageKey, compressedImage);
@@ -136,28 +136,28 @@ const buscarCapaDoJogo = async (nomeJogo: string): Promise<string> => {
           } catch (error) {
             console.error('Erro ao processar a imagem:', error);
           }
-        } 
+        }
 
         throw new Error('Nenhuma imagem retrato encontrada ou erro ao processar todas as imagens');
       } else {
         throw new Error('Nenhuma imagem encontrada');
-      } 
+      }
     } catch (error) {
       console.error('Erro ao buscar a imagem:', error);
       throw new Error('Erro ao buscar a imagem');
-    } 
+    }
   }
 };
 
 const compressImage = (imageUrl: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "Anonymous"; 
+    img.crossOrigin = "Anonymous";
     img.onload = () => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const MAX_WIDTH = 800;
-      const MAX_HEIGHT = 800; 
+      const MAX_HEIGHT = 800;
       let width = img.width;
       let height = img.height;
 

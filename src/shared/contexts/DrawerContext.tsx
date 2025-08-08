@@ -9,6 +9,7 @@ interface IDrawerSubOption {
 interface IDrawerOption {
   icon: string;
   label: string;
+  path?: string;
   subOptions?: IDrawerSubOption[];
 }
 

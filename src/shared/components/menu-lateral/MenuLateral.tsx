@@ -2,6 +2,7 @@ import { Box, Drawer, Divider, List, useTheme, useMediaQuery, Typography, Avatar
 import { useAppThemeContext, useAuthContext, useDrawerContext } from '../../contexts';
 import { SubMenu } from './SubMenu';
 import { useNavigate } from 'react-router-dom';
+import { ListItemLink } from './ListItemLink';
 
 interface IMenuLateralProps {
   children: React.ReactNode;
@@ -23,7 +24,7 @@ export const MenuLateral: React.FC<IMenuLateralProps> = ({ children }) => {
         onClose={toggleDrawerOpen}
       >
         <Box width={theme.spacing(28)} height="100%" display="flex" flexDirection="column">
-        {user && (
+          {user && (
             <Box
               width="100%"
               height={theme.spacing(24)}
@@ -51,14 +52,23 @@ export const MenuLateral: React.FC<IMenuLateralProps> = ({ children }) => {
           <Divider />
           <Box flex={1}>
             <List component="nav">
-              {drawerOptions.map(option => (
-                <SubMenu
-                  key={option.label}
-                  title={option.label}
-                  icon={option.icon}
-                  subOptions={option.subOptions || []}
-                />
-              ))}
+              {drawerOptions.map(option =>
+                option.subOptions && option.subOptions.length > 0 ? (
+                  <SubMenu
+                    key={option.label}
+                    title={option.label}
+                    icon={option.icon}
+                    subOptions={option.subOptions}
+                  />
+                ) : (
+                  <ListItemLink
+                    key={option.label}
+                    to={option.path || '/'}
+                    icon={option.icon}
+                    label={option.label}
+                  />
+                )
+              )}
             </List>
           </Box>
           <Box>
@@ -69,23 +79,23 @@ export const MenuLateral: React.FC<IMenuLateralProps> = ({ children }) => {
                     <Icon>dark_mode</Icon>
                   </ListItemIcon>
                 </ListItemButton>
+                <ListItemButton
+                  onClick={() => {
+                    navigate('/configuracoes');
+                    if (mdDown) toggleDrawerOpen();
+                  }}
+                  sx={{ minWidth: 0, width: 48, justifyContent: 'center' }}
+                >
+                  <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>
+                    <Icon>settings</Icon>
+                  </ListItemIcon>
+                </ListItemButton>
+              </List>
               <ListItemButton
-                onClick={() => {
-                  navigate('/configuracoes');
-                  if (mdDown) toggleDrawerOpen();
-                }}
-                sx={{ minWidth: 0, width: 48, justifyContent: 'center' }}
-              >
-                <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>
-                  <Icon>settings</Icon>
-                </ListItemIcon>
-              </ListItemButton>
-              </List>           
-              <ListItemButton 
                 onClick={() => {
                   logout();
                   if (mdDown) toggleDrawerOpen();
-                }} 
+                }}
                 sx={{ justifyContent: 'center' }}>
                 <Box display="flex" flexDirection="row" alignItems="center" justifyContent="center" width="100%">
                   <Icon sx={{ mr: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>logout</Icon>

@@ -8,7 +8,8 @@ import {
   ListagemDeJogo,
   BibliotecaDeLivros,
   ListagemDeLivro,
-  DetalheDeLivros
+  DetalheDeLivros,
+  PaginaInicial
 } from '../pages';
 
 export const AppRoutes = () => {
@@ -16,6 +17,11 @@ export const AppRoutes = () => {
 
   useEffect(() => {
     setDrawerOptions([
+      {
+        icon: 'home',
+        label: 'Página Inicial',
+        path: '/pagina-inicial',
+      },
       {
         icon: 'sports_esports',
         label: 'Jogos',
@@ -37,6 +43,7 @@ export const AppRoutes = () => {
 
   return (
     <Routes>
+      <Route path="/pagina-inicial" element={<PaginaInicial />} />
       <Route path="/configuracoes" element={<Configuracoes />} />
       <Route path="/biblioteca-jogos" element={<BibliotecaDeJogos />} />
       <Route path="/jogos" element={<ListagemDeJogo />} />
@@ -45,7 +52,7 @@ export const AppRoutes = () => {
       <Route path="/livros" element={<ListagemDeLivro />} />
       <Route path="/livros/detalhe/:id" element={<DetalheDeLivros />} />
 
-      <Route path="*" element={<Navigate to="/biblioteca-jogos" />} />
+      <Route path="*" element={<Navigate to="/pagina-inicial" />} />
     </Routes>
   );
 };

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { OrdemType, DirecaoType } from '../../shared/components/ferramentas-da-listagem/components/OrdenacaoMenu';
 import { Box } from '@mui/material';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Environment } from '../../shared/environment';
 import { CustomCardList, FerramentasDaListagem } from '../../shared/components';
@@ -14,15 +14,26 @@ export const BibliotecaDeJogos = () => {
   const [isLoadingJogos, setIsLoadingJogos] = useState(true);
   const { isMobile } = useAppThemeContext();
   const navigate = useNavigate();
+  const location = useLocation();
   const [jogos, setJogos] = useState<any[]>([]);
   const [imagensJogos, setImagensJogos] = useState<{ [key: string]: string }>({}); // Tipando o estado
   const { user } = useAuthContext();
   const [totalCount, setTotalCount] = useState(0);
   const consultaRealizada = useRef(true);
   const layoutRef = useRef<ILayoutBaseDePaginaHandle>(null);
-  const [ordem, setOrdem] = useState<OrdemType>(() => localStorage.getItem('biblioteca-jogos-ordem') as OrdemType || 'data');
-  const [direcao, setDirecao] = useState<DirecaoType>(() => localStorage.getItem('biblioteca-jogos-direcao') as DirecaoType || 'desc');
   const [reloadFlag, setReloadFlag] = useState(0);
+
+  function getOrdemDirecao<T extends string>(key: 'ordem' | 'direcao', def: T): T {
+    if (location.state && typeof location.state[key] === 'string') {
+      return location.state[key] as T;
+    }
+    const ls = localStorage.getItem(`biblioteca-jogos-${key}`);
+    if (ls) return ls as T;
+    return def;
+  }
+
+  const [ordem, setOrdem] = useState<OrdemType>(() => getOrdemDirecao('ordem', 'data'));
+  const [direcao, setDirecao] = useState<DirecaoType>(() => getOrdemDirecao('direcao', 'desc'));
 
   const recarregarJogos = () => setReloadFlag(flag => flag + 1);
 
