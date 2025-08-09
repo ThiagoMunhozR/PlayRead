@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
+import { Accordion, AccordionSummary, AccordionDetails, Typography, Icon, Box, Button } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { JogosVisaoGeral } from './JogosVisaoGeral';
+import { JogosEstatisticas } from './components/JogosEstatisticas';
 import { JogosService } from '../../../shared/services/api/jogos/JogosService';
 import { useAuthContext, useAppThemeContext } from '../../../shared/contexts';
 import { carregarImagensItens } from '../../../shared/utils/carregarImagensItens';
@@ -60,11 +60,32 @@ export const JogosHomeSection: React.FC = () => {
 
     return (
         <Accordion defaultExpanded sx={{ width: '100%', marginBottom: 2, bgcolor: themeName === 'dark' ? 'background.default' : 'background.paper', boxShadow: 'none', border: 'none' }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h5" sx={{ margin: '0 0 0 8px' }}>Jogos</Typography>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />} >
+                <Box display="flex" alignItems="center">
+                    <Icon sx={{ fontSize: 28, mr: 2 }}>sports_esports</Icon>
+                    <Typography variant="h5">
+                        Jogos
+                    </Typography>
+                </Box>
             </AccordionSummary>
             <AccordionDetails>
-                <JogosVisaoGeral games={games} totalCount={totalCount} />
+                <Box display="flex" justifyContent="space-between" width="100%" mb={2}>
+                    <Button
+                        color='primary'
+                        disableElevation
+                        variant='contained'
+                        onClick={() => navigate('/biblioteca-jogos')}
+                        startIcon={<Icon>book</Icon>}
+                    >Biblioteca</Button>
+                    <Button
+                        color='primary'
+                        disableElevation
+                        variant='contained'
+                        onClick={() => navigate('/jogos/detalhe/novo', { state: { from: 'biblioteca' } })}
+                        endIcon={<Icon>add</Icon>}
+                    >Novo</Button>
+                </Box>
+
                 <CustomCardRows
                     title="Últimos jogos zerados:"
                     items={ultimosZerados.map((jogo) => ({
@@ -75,6 +96,7 @@ export const JogosHomeSection: React.FC = () => {
                         rating: jogo.avaliacao || 0,
                         showTrophy: !!jogo.dataCompleto,
                     }))}
+                    defaultExpanded={true}
                     isMobile={isMobile}
                     loading={isLoading}
                     onSeeMore={() => handleVerMais('data', 'desc')}
@@ -93,6 +115,7 @@ export const JogosHomeSection: React.FC = () => {
                     loading={isLoading}
                     onSeeMore={() => handleVerMais('avaliacao', 'desc')}
                 />
+                <JogosEstatisticas games={games} totalCount={totalCount} />
             </AccordionDetails>
         </Accordion>
     );

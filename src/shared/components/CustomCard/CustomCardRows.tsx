@@ -18,6 +18,7 @@ interface CustomCardRowsProps {
     loading?: boolean;
     onSeeMore: () => void;
     title: string;
+    defaultExpanded?: boolean;
 }
 
 export const CustomCardRows: React.FC<CustomCardRowsProps> = ({
@@ -27,9 +28,10 @@ export const CustomCardRows: React.FC<CustomCardRowsProps> = ({
     loading = false,
     onSeeMore,
     title,
+    defaultExpanded = false,
 }) => {
     return (
-        <Accordion sx={{ width: '100%', marginTop: 2, bgcolor: 'transparent', boxShadow: 'none', border: 'none', borderRadius: 2 }}>
+        <Accordion defaultExpanded={defaultExpanded} sx={{ width: '100%', marginTop: 2, bgcolor: 'transparent', boxShadow: 'none', border: 'none', borderRadius: 2 }}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography variant="h6" sx={{ margin: '0 0 0 8px' }}>{title}</Typography>
             </AccordionSummary>
