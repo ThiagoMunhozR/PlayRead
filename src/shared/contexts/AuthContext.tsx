@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { AuthService } from '../services/api/auth/AuthService';
 import { Environment } from '../environment';
 import { supabase } from '../services/api/axios-config';
+import { JogosService } from '../services/api/jogos/JogosService';
 
 // Define a interface para o contexto de autenticação
 interface IAuthContextData {
@@ -20,6 +21,7 @@ interface IUsuario {
   FotoURL: string;
   Nome: string;
   Email: string;
+  Xuid: string;
 }
 
 const AuthContext = createContext({} as IAuthContextData);
@@ -44,7 +46,38 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
       setAccessToken(JSON.parse(storedAccessToken));
     }
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+
+      if (parsedUser?.Xuid) {
+        const storageKey = `titleHistory_${parsedUser.Xuid}`;
+        const lastFetchKey = `titleHistory_lastFetch_${parsedUser.Xuid}`;
+        const now = Date.now();
+        const lastFetch = Number(localStorage.getItem(lastFetchKey));
+        try {
+          const json = localStorage.getItem(storageKey);
+          if (json) {
+            console.log('titleHistory JSON:', JSON.parse(json));
+          } else {
+            console.log('titleHistory JSON: (vazio)');
+          }
+        } catch (e) {
+          console.log('Erro ao ler JSON do titleHistory:', e);
+        }
+        console.log('Last fetch:', lastFetch, 'Now:', now);
+        if (!lastFetch || now - lastFetch > 15 * 60 * 1000) {
+          (async () => {
+            try {
+              console.log('Buscando TitleHistory do usuário:', parsedUser.Xuid);
+              const titleHistory = await JogosService.getTitleHistoryByXuid(parsedUser.Xuid);
+              localStorage.setItem(storageKey, JSON.stringify(titleHistory));
+              localStorage.setItem(lastFetchKey, now.toString());
+            } catch (e) {
+              console.error('Erro ao buscar TitleHistory:', e);
+            }
+          })();
+        }
+      }
     }
   }, []);
 
@@ -59,6 +92,24 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
 
       setAccessToken(result.accessToken);
       setUser(result.user);
+      // Busca TitleHistory do Xbox e salva no localStorage com expiração de 15 minutos
+      if (result.user?.Xuid) {
+        const storageKey = `titleHistory_${result.user.Xuid}`;
+        const lastFetchKey = `titleHistory_lastFetch_${result.user.Xuid}`;
+        const now = Date.now();
+        const lastFetch = Number(localStorage.getItem(lastFetchKey));
+        if (!lastFetch || now - lastFetch > 15 * 60 * 1000) {
+          try {
+            console.log('Buscando TitleHistory do usuário:', result.user.Xuid);
+            const titleHistory = await JogosService.getTitleHistoryByXuid(result.user.Xuid);
+            localStorage.setItem(storageKey, JSON.stringify(titleHistory));
+            localStorage.setItem(lastFetchKey, now.toString());
+          } catch (e) {
+            // Silencia erro, não bloqueia login
+            console.error('Erro ao buscar TitleHistory:', e);
+          }
+        }
+      }
     }
   }, []);
 

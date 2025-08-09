@@ -186,6 +186,27 @@ const compressImage = (imageUrl: string): Promise<string> => {
   });
 };
 
+const getTitleHistoryByXuid = async (xuid: string) => {
+  // URL do proxy + encode da URL original
+  const proxyUrl = "https://corsproxy.io/?";
+  const targetUrl = `https://xbl.io/api/v2/player/titleHistory/${xuid}`;
+
+  const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
+    headers: {
+      'X-Authorization': '5fad7ab3-efac-409c-95ec-978b4a2ecf2a',
+      'Accept': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Erro ao buscar histórico de títulos');
+  }
+
+  return response.json();
+};
+
+
+
 export const JogosService = {
   getAll,
   create,
@@ -194,4 +215,5 @@ export const JogosService = {
   deleteById,
   getUltimoRegistroJogos,
   buscarCapaDoJogo,
+  getTitleHistoryByXuid,
 };

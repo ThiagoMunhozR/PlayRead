@@ -11,6 +11,7 @@ interface IUsuario {
     FotoURL: string;
     Nome: string;
     Email: string;
+    Xuid: string;
 }
 
 interface IUsuarioEdit {
@@ -24,11 +25,11 @@ interface IAuth {
 }
 
 const updateById = async (id: number, dados: IUsuarioEdit): Promise<void | Error> => {
-  return await GenericService.updateById<IUsuarioEdit>('usuarios', id, dados, 'CodigoUsuario');
+    return await GenericService.updateById<IUsuarioEdit>('usuarios', id, dados, 'CodigoUsuario');
 };
 
 const getById = async (id: number): Promise<IUsuarioEdit | Error> => {
-  return await GenericService.getById<IUsuarioEdit>('usuarios', id, 'CodigoUsuario');
+    return await GenericService.getById<IUsuarioEdit>('usuarios', id, 'CodigoUsuario');
 };
 
 
@@ -51,10 +52,10 @@ const auth = async (email: string, password: string): Promise<IAuth | Error> => 
         // Busca os dados do usuário na tabela 'usuarios'
         const { data: usuarioData, error: fetchError } = await supabase
             .from('usuarios') // Nome da tabela
-            .select('CodigoUsuario, Gamertag, FotoURL, Nome, Email')
+            .select('CodigoUsuario, Gamertag, FotoURL, Nome, Email, Xuid')
             .eq('Email', email) // Condição para buscar o usuário correto
             .maybeSingle(); // Espera que haja um único registro com esse email
-  
+
         if (fetchError) {
             throw new Error(`Erro ao buscar dados do usuário: ${fetchError.message}`);
         }
@@ -83,7 +84,7 @@ const loginWithSupabaseUser = async (user: any): Promise<IUsuario | Error> => {
         }
         const { data: usuarioData, error: fetchError } = await supabase
             .from('usuarios')
-            .select('CodigoUsuario, Gamertag, FotoURL, Nome, Email')
+            .select('CodigoUsuario, Gamertag, FotoURL, Nome, Email, Xuid')
             .eq('Email', user.email)
             .maybeSingle();
         if (fetchError) {

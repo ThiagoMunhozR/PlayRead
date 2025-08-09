@@ -24,6 +24,31 @@ export async function verificarCapaDoItem(
   return new Promise<string>((resolve) => {
     image.onload = () => resolve(imagePath);
     image.onerror = async () => {
+      // Tenta buscar displayImage do titleHistory salvo no localStorage
+      let displayImage: string | undefined = undefined;
+      try {
+        const userStr = localStorage.getItem('APP_USER') || localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        if (user?.Xuid) {
+          const titleHistoryStr = localStorage.getItem(`titleHistory_${user.Xuid}`);
+          if (titleHistoryStr) {
+            const titleHistory = JSON.parse(titleHistoryStr);
+            if (Array.isArray(titleHistory.titles)) {
+              const found = titleHistory.titles.find((t: any) => t.name?.toLowerCase() === nome.toLowerCase());
+              if (found && found.displayImage) {
+                console.log('Capa encontrada no titleHistory:', found.displayImage);
+                displayImage = found.displayImage;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        // ignora erro de parse/localStorage
+      }
+      if (displayImage) {
+        resolve(displayImage);
+        return;
+      }
       try {
         const imageUrl = await buscarCapa(nome);
         resolve(imageUrl);

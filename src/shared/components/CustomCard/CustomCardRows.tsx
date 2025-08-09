@@ -16,7 +16,7 @@ interface CustomCardRowsProps {
     isMobile: boolean;
     onDeleted?: () => void;
     loading?: boolean;
-    onSeeMore: () => void;
+    onSeeMore?: () => void;
     title: string;
     defaultExpanded?: boolean;
 }
@@ -88,34 +88,36 @@ export const CustomCardRows: React.FC<CustomCardRowsProps> = ({
                                     </Grid>
                                 ))}
                                 {/* Botão Ver mais */}
-                                <Grid
-                                    item
-                                    key="see-more"
-                                    xs={6}
-                                    sm={4}
-                                    md={3}
-                                    lg={2.4}
-                                    xl={2.4}
-                                    sx={{ minWidth: isMobile ? 140 : 200, flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}
-                                >
-                                    <IconButton
-                                        color="primary"
-                                        onClick={onSeeMore}
-                                        sx={{
-                                            width: isMobile ? 56 : 72,
-                                            height: isMobile ? 56 : 72,
-                                            mb: 1,
-                                            '&:hover': {
-                                                backgroundColor: 'primary.50',
-                                            },
-                                        }}
+                                {onSeeMore && (
+                                    <Grid
+                                        item
+                                        key="see-more"
+                                        xs={6}
+                                        sm={4}
+                                        md={3}
+                                        lg={2.4}
+                                        xl={2.4}
+                                        sx={{ minWidth: isMobile ? 140 : 200, flex: '0 0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}
                                     >
-                                        <AddCircleOutlineIcon sx={{ fontSize: isMobile ? 32 : 40 }} />
-                                    </IconButton>
-                                    <Typography variant={isMobile ? 'body2' : 'body1'} align="center" color="primary">
-                                        Ver mais
-                                    </Typography>
-                                </Grid>
+                                        <IconButton
+                                            color="primary"
+                                            onClick={onSeeMore}
+                                            sx={{
+                                                width: isMobile ? 56 : 72,
+                                                height: isMobile ? 56 : 72,
+                                                mb: 1,
+                                                '&:hover': {
+                                                    backgroundColor: 'primary.50',
+                                                },
+                                            }}
+                                        >
+                                            <AddCircleOutlineIcon sx={{ fontSize: isMobile ? 32 : 40 }} />
+                                        </IconButton>
+                                        <Typography variant={isMobile ? 'body2' : 'body1'} align="center" color="primary">
+                                            Ver mais
+                                        </Typography>
+                                    </Grid>
+                                )}
                             </>}
                     </Grid>
                 </Box>

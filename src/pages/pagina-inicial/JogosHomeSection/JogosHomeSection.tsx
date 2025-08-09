@@ -16,29 +16,30 @@ export const JogosHomeSection: React.FC = () => {
     const navigate = useNavigate();
 
     const [imagensJogos, setImagensJogos] = useState<{ [key: string]: string }>({});
-    const [totalCount, setTotalCount] = useState(0);
 
-    const { data: games = [], isLoading } = useQuery({
+    const { data: games = { totalCount: 0, data: [] }, isLoading: IsLoadingGames } = useQuery({
         queryKey: ['jogos', user?.CodigoUsuario],
         queryFn: async () => {
             const result = await JogosService.getAll(user?.CodigoUsuario, 0, '', 9999);
             if (result instanceof Error) throw new Error(result.message);
-            setTotalCount(result.totalCount ?? 0);
-            return result.data;
+            return result;
         },
         enabled: !!user?.CodigoUsuario,
-        refetchOnWindowFocus: true,
+        refetchOnWindowFocus: false, // impede refetch automático ao focar a janela
     });
 
-    const ultimosZerados = useMemo(() => games.slice(0, 10), [games]);
+    const isLoading = IsLoadingGames;
+    const totalCount = games?.totalCount ?? 0;
+    const gamesList = games?.data ?? [];
+
+    const ultimosZerados = useMemo(() => gamesList.slice(0, 10), [gamesList]);
 
     const melhoresAvaliados = useMemo(() => {
-        return games
+        return gamesList
             .filter(jogo => typeof jogo.avaliacao === 'number' && jogo.avaliacao > 0)
             .sort((a, b) => (b.avaliacao ?? 0) - (a.avaliacao ?? 0))
             .slice(0, 10);
-    }, [games]);
-
+    }, [gamesList]);
 
     useEffect(() => {
         const jogosParaImagens = [...ultimosZerados, ...melhoresAvaliados]
@@ -57,6 +58,22 @@ export const JogosHomeSection: React.FC = () => {
             },
         });
     };
+
+    // Pega os 10 últimos jogos jogados do titleHistory do localStorage
+    let ultimosJogosJogados: any[] = [];
+    try {
+        const userStr = localStorage.getItem('APP_USER') || localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        if (user?.Xuid) {
+            const titleHistoryStr = localStorage.getItem(`titleHistory_${user.Xuid}`);
+            if (titleHistoryStr) {
+                const titleHistory = JSON.parse(titleHistoryStr);
+                if (Array.isArray(titleHistory.titles)) {
+                    ultimosJogosJogados = titleHistory.titles.slice(0, 10);
+                }
+            }
+        }
+    } catch { }
 
     return (
         <Accordion defaultExpanded sx={{ width: '100%', marginBottom: 2, bgcolor: themeName === 'dark' ? 'background.default' : 'background.paper', boxShadow: 'none', border: 'none' }}>
@@ -87,6 +104,28 @@ export const JogosHomeSection: React.FC = () => {
                 </Box>
 
                 <CustomCardRows
+                    title="Últimos jogos jogados:"
+                    items={ultimosJogosJogados.map((jogo) => {
+                        // Procura o jogo correspondente no gamesList pelo nome
+                        const jogoLocal = gamesList.find(g => g.nome === jogo.name);
+                        return {
+                            id: jogo.titleId || jogo.name,
+                            imageSrc:
+                                imagensJogos[jogo.name]
+                                || jogo.displayImage
+                                || '/imagens/loading.gif',
+                            title: jogo.name,
+                            subtitle: jogoLocal?.data,
+                            rating: jogoLocal?.avaliacao,
+                            showTrophy: !!jogoLocal?.dataCompleto,
+                        };
+                    })}
+                    defaultExpanded={true}
+                    isMobile={isMobile}
+                    loading={false}
+                />
+
+                <CustomCardRows
                     title="Últimos jogos zerados:"
                     items={ultimosZerados.map((jogo) => ({
                         id: jogo.id,
@@ -115,7 +154,7 @@ export const JogosHomeSection: React.FC = () => {
                     loading={isLoading}
                     onSeeMore={() => handleVerMais('avaliacao', 'desc')}
                 />
-                <JogosEstatisticas games={games} totalCount={totalCount} />
+                <JogosEstatisticas games={gamesList} totalCount={totalCount} />
             </AccordionDetails>
         </Accordion>
     );
