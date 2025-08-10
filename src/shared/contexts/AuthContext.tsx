@@ -70,10 +70,10 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
           (async () => {
             try {
               console.log('Buscando TitleHistory do usuário:', parsedUser.Xuid);
-              window.dispatchEvent(new Event('titleHistoryUpdated'));
               const titleHistory = await JogosService.getTitleHistoryByXuid(parsedUser.Xuid);
               localStorage.setItem(storageKey, JSON.stringify(titleHistory));
               localStorage.setItem(lastFetchKey, now.toString());
+              window.dispatchEvent(new Event('titleHistoryUpdated'));
             } catch (e) {
               console.error('Erro ao buscar TitleHistory:', e);
             }
