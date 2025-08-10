@@ -59,21 +59,66 @@ export const JogosHomeSection: React.FC = () => {
         });
     };
 
-    // Pega os 10 últimos jogos jogados do titleHistory do localStorage
-    let ultimosJogosJogados: any[] = [];
-    try {
-        const userStr = localStorage.getItem('APP_USER') || localStorage.getItem('user');
-        const user = userStr ? JSON.parse(userStr) : null;
-        if (user?.Xuid) {
-            const titleHistoryStr = localStorage.getItem(`titleHistory_${user.Xuid}`);
-            if (titleHistoryStr) {
-                const titleHistory = JSON.parse(titleHistoryStr);
-                if (Array.isArray(titleHistory.titles)) {
-                    ultimosJogosJogados = titleHistory.titles.slice(0, 10);
+    // Estado reativo para os últimos jogos jogados e horário de atualização
+    const [ultimosJogosJogados, setUltimosJogosJogados] = useState<any[]>([]);
+    const [horarioUltimaAtualizacao, setHorarioUltimaAtualizacao] = useState<string | null>(null);
+
+    // Função para ler do localStorage e horário
+    const carregarUltimosJogosJogadosEHorario = () => {
+        let jogos: any[] = [];
+        let horario: string | null = null;
+        try {
+            const userStr = localStorage.getItem('APP_USER') || localStorage.getItem('user');
+            const user = userStr ? JSON.parse(userStr) : null;
+            if (user?.Xuid) {
+                const titleHistoryStr = localStorage.getItem(`titleHistory_${user.Xuid}`);
+                if (titleHistoryStr) {
+                    const titleHistory = JSON.parse(titleHistoryStr);
+                    if (Array.isArray(titleHistory.titles)) {
+                        jogos = titleHistory.titles.slice(0, 10);
+                    }
+                }
+                // Busca o horário de atualização
+                const lastFetchStr = localStorage.getItem(`titleHistory_lastFetch_${user.Xuid}`);
+                if (lastFetchStr) {
+                    const date = new Date(Number(lastFetchStr));
+                    const horas = date.getHours().toString().padStart(2, '0');
+                    const minutos = date.getMinutes().toString().padStart(2, '0');
+                    horario = `${horas}:${minutos}`;
                 }
             }
-        }
-    } catch { }
+        } catch { }
+        return { jogos, horario };
+    };
+
+    // Atualiza ao montar e ao receber evento customizado
+    useEffect(() => {
+        const atualizar = () => {
+            const { jogos, horario } = carregarUltimosJogosJogadosEHorario();
+            setUltimosJogosJogados(jogos);
+            setHorarioUltimaAtualizacao(horario);
+        };
+        atualizar();
+
+        // Evento customizado para atualização imediata
+        const onTitleHistoryUpdated = () => {
+            atualizar();
+        };
+        window.addEventListener('titleHistoryUpdated', onTitleHistoryUpdated);
+
+        // Listener para mudanças em outras abas
+        const onStorage = (e: StorageEvent) => {
+            if (e.key && e.key.startsWith('titleHistory_')) {
+                atualizar();
+            }
+        };
+        window.addEventListener('storage', onStorage);
+
+        return () => {
+            window.removeEventListener('titleHistoryUpdated', onTitleHistoryUpdated);
+            window.removeEventListener('storage', onStorage);
+        };
+    }, []);
 
     return (
         <Accordion defaultExpanded sx={{ width: '100%', marginBottom: 2, bgcolor: themeName === 'dark' ? 'background.default' : 'background.paper', boxShadow: 'none', border: 'none' }}>
@@ -123,6 +168,7 @@ export const JogosHomeSection: React.FC = () => {
                     defaultExpanded={true}
                     isMobile={isMobile}
                     loading={false}
+                    horarioAtualizacao={horarioUltimaAtualizacao || undefined}
                 />
 
                 <CustomCardRows

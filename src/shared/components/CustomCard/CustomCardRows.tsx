@@ -19,7 +19,11 @@ interface CustomCardRowsProps {
     onSeeMore?: () => void;
     title: string;
     defaultExpanded?: boolean;
+    horarioAtualizacao?: string;
 }
+
+
+import { useState } from 'react';
 
 export const CustomCardRows: React.FC<CustomCardRowsProps> = ({
     items,
@@ -29,13 +33,25 @@ export const CustomCardRows: React.FC<CustomCardRowsProps> = ({
     onSeeMore,
     title,
     defaultExpanded = false,
+    horarioAtualizacao,
 }) => {
+    const [expanded, setExpanded] = useState(defaultExpanded);
+
     return (
-        <Accordion defaultExpanded={defaultExpanded} sx={{ width: '100%', marginTop: 2, bgcolor: 'transparent', boxShadow: 'none', border: 'none', borderRadius: 2 }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" sx={{ margin: '0 0 0 8px' }}>{title}</Typography>
+        <Accordion
+            defaultExpanded={defaultExpanded}
+            sx={{ width: '100%', marginTop: 2, bgcolor: 'transparent', boxShadow: 'none', border: 'none', borderRadius: 2, position: 'relative' }}
+            onChange={(_, isExp) => setExpanded(isExp)}
+        >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ display: 'flex', alignItems: 'center', pr: 4 }}>
+                <Typography variant="h6" sx={{ margin: '0 0 0 8px', flex: 1 }}>{title}</Typography>
+                {horarioAtualizacao && expanded && (
+                    <Box sx={{ color: 'text.secondary', fontSize: isMobile ? 12 : 14, ml: 2, minWidth: 90, textAlign: 'right', display: 'flex', alignItems: 'center', height: 40, pr: 1 }}>
+                        Atualizado às {horarioAtualizacao}
+                    </Box>
+                )}
             </AccordionSummary>
-            <AccordionDetails>
+            <AccordionDetails sx={{ position: 'relative' }}>
                 <Box sx={{ overflowX: 'auto', width: '100%' }}>
                     <Grid
                         container

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, Box, Typography, Rating } from '@mui/material';
+import { Card, CardContent, Box, Typography, Rating, Button, Icon } from '@mui/material';
 import Tooltip from '@mui/material/Tooltip';
 import { ActionMenu } from '../ActionMenu/ActionMenu';
 import { useMessageContext } from '../../contexts';
@@ -182,6 +182,18 @@ export const CustomCard: React.FC<CustomCardProps> = ({
           >
             {title} {showTrophy && '🏆'}
           </Typography>
+          {!subtitle && (
+            <Button
+              variant="contained"
+              disableElevation
+              size='small'
+              endIcon={<Icon>add</Icon>}
+              onClick={() => navigate('/jogos/detalhe/novo', { state: { from: 'biblioteca', title: title } })}
+              sx={{ marginTop: 2 }}
+            >
+              Adicionar
+            </Button>
+          )}
           {subtitle && (
             <Typography
               variant="body2"

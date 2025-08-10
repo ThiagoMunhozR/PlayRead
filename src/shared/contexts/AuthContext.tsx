@@ -65,10 +65,12 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
           console.log('Erro ao ler JSON do titleHistory:', e);
         }
         console.log('Last fetch:', lastFetch, 'Now:', now);
+
         if (!lastFetch || now - lastFetch > 15 * 60 * 1000) {
           (async () => {
             try {
               console.log('Buscando TitleHistory do usuário:', parsedUser.Xuid);
+              window.dispatchEvent(new Event('titleHistoryUpdated'));
               const titleHistory = await JogosService.getTitleHistoryByXuid(parsedUser.Xuid);
               localStorage.setItem(storageKey, JSON.stringify(titleHistory));
               localStorage.setItem(lastFetchKey, now.toString());

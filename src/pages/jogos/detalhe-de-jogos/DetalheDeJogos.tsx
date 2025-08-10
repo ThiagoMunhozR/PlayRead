@@ -36,6 +36,42 @@ export const DetalheDeJogos: React.FC = () => {
   const [imagemJogo, setImagemJogo] = useState<string>('/imagens/SemImagem.jpg');
   const location = useLocation();
   const from = location.state?.from || 'listagem';
+  const paramTitle = location.state?.title || '';
+
+  const {
+    handleSubmit,
+    control,
+    formState: { errors },
+    setValue,
+  } = useForm<FormData>({
+    defaultValues: {
+      id: id !== 'novo' ? Number(id) : undefined,
+      data: new Date().toISOString().split('T')[0],
+      nome: paramTitle || '',
+      dataCompleto: '',
+      avaliacao: 0,
+    },
+  });
+
+  const watchedNome = useWatch({ control, name: 'nome' });
+  const watchedData = useWatch({ control, name: 'data' });
+  const watchedAvaliacao = useWatch({ control, name: 'avaliacao' });
+  const watchedDataCompleto = useWatch({ control, name: 'dataCompleto' });
+
+  useEffect(() => {
+    if (watchedNome === '') {
+      setImagemJogo('/imagens/SemImagem.jpg');
+    }
+  }, [watchedNome]);
+
+  useEffect(() => {
+    if (id === 'novo' && paramTitle) {
+      carregarImagensItens([{ nome: paramTitle }], 'jogos', JogosService.buscarCapaDoJogo)
+        .then((imgs) => {
+          setImagemJogo(imgs[paramTitle] || '/imagens/SemImagem.jpg');
+        });
+    }
+  }, [id, paramTitle]);
 
   useEffect(() => {
     if (id !== 'novo') {
@@ -57,26 +93,6 @@ export const DetalheDeJogos: React.FC = () => {
       navigate('/jogos');
     }
   };
-
-  const {
-    handleSubmit,
-    control,
-    formState: { errors },
-    setValue,
-  } = useForm<FormData>({
-    defaultValues: {
-      id: id !== 'novo' ? Number(id) : undefined,
-      data: new Date().toISOString().split('T')[0],
-      nome: '',
-      dataCompleto: '',
-      avaliacao: 0,
-    },
-  });
-
-  const watchedNome = useWatch({ control, name: 'nome' });
-  const watchedData = useWatch({ control, name: 'data' });
-  const watchedAvaliacao = useWatch({ control, name: 'avaliacao' });
-  const watchedDataCompleto = useWatch({ control, name: 'dataCompleto' });
 
   useEffect(() => {
     if (id !== 'novo') {

@@ -23,6 +23,24 @@ export function CampoNomeJogo({ field, isLoading, error, helperText, onSelectNom
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // Tenta buscar do localStorage (titleHistory)
+    try {
+      const userStr = localStorage.getItem('APP_USER') || localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      if (user?.Xuid) {
+        const titleHistoryStr = localStorage.getItem(`titleHistory_${user.Xuid}`);
+        if (titleHistoryStr) {
+          const titleHistory = JSON.parse(titleHistoryStr);
+          if (Array.isArray(titleHistory.titles)) {
+            const nomes = titleHistory.titles.map((t: any) => t.name).filter(Boolean);
+            nomes.sort((a: string, b: string) => a.localeCompare(b));
+            setNomesJogos(nomes);
+            return;
+          }
+        }
+      }
+    } catch { }
+    // Se não achou no localStorage, busca do jogos.json
     fetch('/imagens/jogos.json')
       .then((res) => res.json())
       .then((arquivos: string[]) => {
