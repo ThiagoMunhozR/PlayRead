@@ -1,7 +1,7 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Box, Grid, LinearProgress, Paper, TextField } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useForm, Controller, useWatch } from 'react-hook-form';
+import { useForm, Controller, useWatch, set } from 'react-hook-form';
 
 import { CustomCard, FerramentasDeDetalhe } from '../../../shared/components';
 import { RatingBox } from '../../../shared/components/RatingBox/RatingBox';
@@ -37,6 +37,8 @@ export const DetalheDeJogos: React.FC = () => {
   const location = useLocation();
   const from = location.state?.from || 'listagem';
   const paramTitle = location.state?.title || '';
+  const paramTitleId = location.state?.titleId || null;
+  const [titleIdSelecionado, setTitleIdSelecionado] = useState<string | null>(paramTitleId);
 
   const {
     handleSubmit,
@@ -61,6 +63,7 @@ export const DetalheDeJogos: React.FC = () => {
   useEffect(() => {
     if (watchedNome === '') {
       setImagemJogo('/imagens/SemImagem.jpg');
+      setTitleIdSelecionado(null);
     }
   }, [watchedNome]);
 
@@ -167,12 +170,13 @@ export const DetalheDeJogos: React.FC = () => {
                 id: nextId, // Valor do próximo ID gerado
                 data: DataFormatada, // Data do jogo
                 nome: formData.nome, // Nome do jogo
+                titleId: titleIdSelecionado || null, // Title ID do jogo
                 dataCompleto: DataCompletaFormatada, // Data Completa (opcional)
                 avaliacao: formData.avaliacao, // Avaliação inicial
               };
 
               // Adicionar novo jogo
-              JogosService.create(newJogo.id, newJogo.data, newJogo.nome, newJogo.dataCompleto, newJogo.avaliacao, user?.CodigoUsuario).then((result) => {
+              JogosService.create(newJogo.id, newJogo.data, newJogo.nome, newJogo.titleId, newJogo.dataCompleto, newJogo.avaliacao, user?.CodigoUsuario).then((result) => {
                 if (result instanceof Error) {
                   showAlert(result.message, 'error');
                 } else {
@@ -197,6 +201,7 @@ export const DetalheDeJogos: React.FC = () => {
           id: Number(id), // Garantir que id é um número válido
           CodigoUsuario: user?.CodigoUsuario,
           nome: formData.nome,
+          titleId: titleIdSelecionado || null,
           data: DataFormatada,
           dataCompleto: DataCompletaFormatada,
           avaliacao: formData.avaliacao,
@@ -317,10 +322,12 @@ export const DetalheDeJogos: React.FC = () => {
                           isLoading={isLoading}
                           error={!!errors.nome}
                           helperText={errors.nome?.message}
-                          onSelectNome={(nomeSelecionado) => {
+                          onSelectNome={(nomeSelecionado, titleId) => {
                             carregarImagensItens([{ nome: nomeSelecionado }], 'jogos', JogosService.buscarCapaDoJogo)
                               .then((imgs) => {
-                                setImagemJogo(imgs[nomeSelecionado] || '/imagens/SemImagem.jpg');
+                                const img = imgs[nomeSelecionado] || '/imagens/SemImagem.jpg';
+                                setImagemJogo(img);
+                                setTitleIdSelecionado(img !== '/imagens/SemImagem.jpg' ? titleId ?? null : null);
                               });
                           }}
                         />

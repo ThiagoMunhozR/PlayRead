@@ -5,6 +5,7 @@ export interface IListagemJogo {
   id: number;
   data: string;
   nome: string;
+  titleId: string | null;
   dataCompleto: string;
   avaliacao: number;
 }
@@ -13,6 +14,7 @@ export interface IDetalheJogo {
   id: number;
   data: string;
   nome: string;
+  titleId: string | null;
   dataCompleto: string;
   avaliacao: number;
   CodigoUsuario: number | undefined;
@@ -82,6 +84,7 @@ const create = async (
   id: number,
   data: string,
   nome: string,
+  titleId: string | null,
   dataCompleto: string,
   avaliacao: number,
   CodigoUsuario: number | undefined,
@@ -90,6 +93,7 @@ const create = async (
     id,
     data,
     nome,
+    titleId,
     dataCompleto,
     CodigoUsuario,
     avaliacao

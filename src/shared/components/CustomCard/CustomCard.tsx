@@ -10,6 +10,7 @@ interface CustomCardProps {
   isMobile: boolean;
   imageSrc: string;
   title: string;
+  titleId?: string;
   subtitle?: string;
   rating?: number;
   showTrophy?: boolean;
@@ -63,6 +64,7 @@ export const CustomCard: React.FC<CustomCardProps> = ({
   isMobile,
   imageSrc,
   title,
+  titleId,
   subtitle,
   rating,
   showTrophy,
@@ -188,7 +190,7 @@ export const CustomCard: React.FC<CustomCardProps> = ({
               disableElevation
               size='small'
               endIcon={<Icon>add</Icon>}
-              onClick={() => navigate('/jogos/detalhe/novo', { state: { from: 'biblioteca', title: title } })}
+              onClick={() => navigate('/jogos/detalhe/novo', { state: { from: 'biblioteca', title: title, titleId: titleId } })}
               sx={{ marginTop: 2 }}
             >
               Adicionar

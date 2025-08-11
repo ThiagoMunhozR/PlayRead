@@ -9,15 +9,15 @@ export interface CampoNomeJogoProps {
   isLoading: boolean;
   error?: boolean;
   helperText?: string;
-  onSelectNome?: (nome: string) => void;
+  onSelectNome?: (nome: string, titleId: string | null) => void;
 }
 
 export function CampoNomeJogo({ field, isLoading, error, helperText, onSelectNome }: CampoNomeJogoProps) {
-  const [nomesJogos, setNomesJogos] = useState<string[]>([]);
+  const [options, setOptions] = useState<{ name: string; titleId: string | null }[]>([]);
   const inputValue = field.value || "";
   const showOptions = inputValue.length >= 2;
-  const options = showOptions
-    ? nomesJogos.filter(n => n.toLowerCase().includes(inputValue.toLowerCase())).slice(0, 10)
+  const filteredOptions = showOptions
+    ? options.filter(n => n.name.toLowerCase().includes(inputValue.toLowerCase())).slice(0, 10)
     : [];
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -32,9 +32,10 @@ export function CampoNomeJogo({ field, isLoading, error, helperText, onSelectNom
         if (titleHistoryStr) {
           const titleHistory = JSON.parse(titleHistoryStr);
           if (Array.isArray(titleHistory.titles)) {
-            const nomes = titleHistory.titles.map((t: any) => t.name).filter(Boolean);
-            nomes.sort((a: string, b: string) => a.localeCompare(b));
-            setNomesJogos(nomes);
+            const titlesArr = titleHistory.titles as Array<{ name: string; titleId?: string }>;
+            const nomes = titlesArr.map(t => ({ name: t.name, titleId: t.titleId || null })).filter(t => !!t.name);
+            nomes.sort((a, b) => a.name.localeCompare(b.name));
+            setOptions(nomes);
             return;
           }
         }
@@ -44,23 +45,31 @@ export function CampoNomeJogo({ field, isLoading, error, helperText, onSelectNom
     fetch('/imagens/jogos.json')
       .then((res) => res.json())
       .then((arquivos: string[]) => {
-        const nomes = arquivos.map(a => a.replace(/\.jpg$/i, ""));
-        nomes.sort((a, b) => a.localeCompare(b));
-        setNomesJogos(nomes);
+        const nomes = arquivos.map(a => ({ name: a.replace(/\.jpg$/i, ""), titleId: null }));
+        nomes.sort((a, b) => a.name.localeCompare(b.name));
+        setOptions(nomes);
       })
-      .catch(() => setNomesJogos([]));
+      .catch(() => setOptions([]));
   }, []);
 
   const handleInputChange = (_: any, newValue: string) => {
     field.onChange(newValue);
-    setOpen(newValue.length >= 2 && options.length > 0);
+    setOpen(newValue.length >= 2 && filteredOptions.length > 0);
   };
-  const handleChange = (_: any, value: string | null) => {
-    field.onChange(value ?? "");
+  const handleChange = (_: any, value: string | { name: string; titleId: string | null } | null) => {
+    let nome = "";
+    let titleId: string | null = null;
+    if (typeof value === 'string') {
+      nome = value;
+    } else if (value && typeof value === 'object') {
+      nome = value.name;
+      titleId = value.titleId;
+    }
+    field.onChange(nome);
     setOpen(false);
     if (inputRef.current) inputRef.current.blur();
-    if (value && typeof value === 'string' && value.length > 0 && typeof onSelectNome === 'function') {
-      onSelectNome(value);
+    if (nome && typeof onSelectNome === 'function') {
+      onSelectNome(nome, titleId);
     }
   };
   const handleBlur = () => {
@@ -70,13 +79,14 @@ export function CampoNomeJogo({ field, isLoading, error, helperText, onSelectNom
   return (
     <Autocomplete
       freeSolo
-      options={nomesJogos}
+      options={options}
+      getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
       inputValue={inputValue}
       open={open}
       filterOptions={(opts, state) => {
         const val = state.inputValue.toLowerCase();
         if (val.length < 3) return [];
-        return opts.filter(n => n.toLowerCase().includes(val)).slice(0, 10);
+        return opts.filter(n => n.name.toLowerCase().includes(val)).slice(0, 10);
       }}
       onInputChange={handleInputChange}
       onChange={handleChange}

@@ -9,6 +9,7 @@ interface CustomCardRowsProps {
         id: string | number;
         imageSrc: string;
         title: string;
+        titleId?: string;
         subtitle?: string;
         rating?: number;
         showTrophy?: boolean;
@@ -95,6 +96,7 @@ export const CustomCardRows: React.FC<CustomCardRowsProps> = ({
                                             isMobile={isMobile}
                                             imageSrc={item.imageSrc}
                                             title={item.title}
+                                            titleId={item.titleId}
                                             subtitle={item.subtitle}
                                             rating={item.rating}
                                             showTrophy={item.showTrophy}

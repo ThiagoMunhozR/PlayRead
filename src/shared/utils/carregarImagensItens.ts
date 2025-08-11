@@ -15,7 +15,8 @@ export function removerCaracteresEspeciais(nomeArquivo: string) {
 export async function verificarCapaDoItem(
   nome: string,
   tipo: 'livros' | 'jogos',
-  buscarCapa: (nome: string) => Promise<string>
+  buscarCapa: (nome: string) => Promise<string>,
+  titleId?: string
 ): Promise<string> {
   const imagePath = `/imagens/${tipo}/${removerCaracteresEspeciais(nome)}.jpg`;
   const defaultImagePath = '/imagens/SemImagem.jpg';
@@ -34,7 +35,10 @@ export async function verificarCapaDoItem(
           if (titleHistoryStr) {
             const titleHistory = JSON.parse(titleHistoryStr);
             if (Array.isArray(titleHistory.titles)) {
-              const found = titleHistory.titles.find((t: any) => t.name?.toLowerCase() === nome.toLowerCase());
+              let found = titleHistory.titles.find((t: any) => t.name?.toLowerCase() === nome.toLowerCase());
+              if (!found && titleId) {
+                found = titleHistory.titles.find((t: any) => t.titleId === titleId);
+              }
               if (found && found.displayImage) {
                 console.log('Capa encontrada no titleHistory:', found.displayImage);
                 displayImage = found.displayImage;
@@ -69,7 +73,7 @@ export async function carregarImagensItens(
 ): Promise<{ [key: string]: string }> {
   const imagens: { [key: string]: string } = {};
   for (const item of itens) {
-    const capa = await verificarCapaDoItem(item.nome, tipo, buscarCapa);
+    const capa = await verificarCapaDoItem(item.nome, tipo, buscarCapa, tipo === 'jogos' ? item.titleId : undefined);
     imagens[item.nome] = capa;
   }
   return imagens;

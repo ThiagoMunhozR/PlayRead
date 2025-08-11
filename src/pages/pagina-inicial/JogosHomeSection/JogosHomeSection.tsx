@@ -188,7 +188,7 @@ export const JogosHomeSection: React.FC = () => {
                     title="Últimos jogos jogados:"
                     items={ultimosJogosJogados.map((jogo) => {
                         // Procura o jogo correspondente no gamesList pelo nome
-                        const jogoLocal = gamesList.find(g => g.nome === jogo.name);
+                        const jogoLocal = gamesList.find(g => (g.nome === jogo.name) || (g.titleId === jogo.titleId));
                         return {
                             id: jogo.titleId || jogo.name,
                             imageSrc:
@@ -196,6 +196,7 @@ export const JogosHomeSection: React.FC = () => {
                                 || jogo.displayImage
                                 || '/imagens/loading.gif',
                             title: jogo.name,
+                            titleId: jogo.titleId,
                             subtitle: jogoLocal?.data,
                             rating: jogoLocal?.avaliacao,
                             showTrophy: !!jogoLocal?.dataCompleto,
