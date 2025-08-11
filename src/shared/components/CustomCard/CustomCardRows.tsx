@@ -19,7 +19,7 @@ interface CustomCardRowsProps {
     onSeeMore?: () => void;
     title: string;
     defaultExpanded?: boolean;
-    horarioAtualizacao?: string;
+    labelInfo?: string;
 }
 
 
@@ -33,7 +33,7 @@ export const CustomCardRows: React.FC<CustomCardRowsProps> = ({
     onSeeMore,
     title,
     defaultExpanded = false,
-    horarioAtualizacao,
+    labelInfo,
 }) => {
     const [expanded, setExpanded] = useState(defaultExpanded);
 
@@ -45,9 +45,9 @@ export const CustomCardRows: React.FC<CustomCardRowsProps> = ({
         >
             <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ display: 'flex', alignItems: 'center', pr: 4 }}>
                 <Typography variant="h6" sx={{ margin: '0 0 0 8px', flex: 1 }}>{title}</Typography>
-                {horarioAtualizacao && expanded && (
+                {labelInfo && expanded && (
                     <Box sx={{ color: 'text.secondary', fontSize: isMobile ? 12 : 14, ml: 2, minWidth: 90, textAlign: 'right', display: 'flex', alignItems: 'center', height: 40, pr: 1 }}>
-                        Atualizado às {horarioAtualizacao}
+                        {labelInfo}
                     </Box>
                 )}
             </AccordionSummary>

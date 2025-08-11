@@ -59,27 +59,73 @@ export const JogosHomeSection: React.FC = () => {
         });
     };
 
-    // Estado reativo para os últimos jogos jogados e horário de atualização
     const [ultimosJogosJogados, setUltimosJogosJogados] = useState<any[]>([]);
     const [horarioUltimaAtualizacao, setHorarioUltimaAtualizacao] = useState<string | null>(null);
+    const [isLoadingXbox, setIsLoadingXbox] = useState(false);
 
-    // Função para ler do localStorage e horário
-    const carregarUltimosJogosJogadosEHorario = () => {
+    // Função para ler do localStorage e horário, e buscar do Xbox se necessário
+    const carregarUltimosJogosJogadosEHorario = async () => {
         let jogos: any[] = [];
         let horario: string | null = null;
         try {
             const userStr = localStorage.getItem('APP_USER') || localStorage.getItem('user');
             const user = userStr ? JSON.parse(userStr) : null;
             if (user?.Xuid) {
-                const titleHistoryStr = localStorage.getItem(`titleHistory_${user.Xuid}`);
-                if (titleHistoryStr) {
-                    const titleHistory = JSON.parse(titleHistoryStr);
-                    if (Array.isArray(titleHistory.titles)) {
-                        jogos = titleHistory.titles.slice(0, 10);
+                const storageKey = `titleHistory_${user.Xuid}`;
+                const lastFetchKey = `titleHistory_lastFetch_${user.Xuid}`;
+                const now = Date.now();
+                const lastFetch = Number(localStorage.getItem(lastFetchKey));
+
+                // Se nunca buscou ou passou 15 minutos, busca do Xbox em background
+                if (!lastFetch || now - lastFetch > 15 * 60 * 1000) {
+                    if (!lastFetch) {
+                        setIsLoadingXbox(true);
                     }
+                    setHorarioUltimaAtualizacao('Atualizando...');
+                    console.log('Buscando titleHistory do Xbox...');
+                    try {
+                        const titleHistory = await JogosService.getTitleHistoryByXuid(user.Xuid);
+                        localStorage.setItem(storageKey, JSON.stringify(titleHistory));
+                        localStorage.setItem(lastFetchKey, now.toString());
+                        // Atualiza a tela com os novos dados
+                        if (Array.isArray(titleHistory.titles)) {
+                            setUltimosJogosJogados(titleHistory.titles.slice(0, 10));
+                        }
+                        const date = new Date(now);
+                        const horas = date.getHours().toString().padStart(2, '0');
+                        const minutos = date.getMinutes().toString().padStart(2, '0');
+                        setHorarioUltimaAtualizacao(`Atualizado às ${horas}:${minutos}`);
+                    } catch (e) {
+                        setHorarioUltimaAtualizacao('Erro ao atualizar');
+                    }
+                    setIsLoadingXbox(false);
                 }
-                // Busca o horário de atualização
-                const lastFetchStr = localStorage.getItem(`titleHistory_lastFetch_${user.Xuid}`);
+            }
+        } catch { setIsLoadingXbox(false); }
+        return { jogos, horario };
+    };
+
+    useEffect(() => {
+        let cancelado = false;
+        const atualizar = async () => {
+            // Carrega do localStorage imediatamente
+            const userStr = localStorage.getItem('APP_USER') || localStorage.getItem('user');
+            const user = userStr ? JSON.parse(userStr) : null;
+            let jogos: any[] = [];
+            let horario: string | null = null;
+            if (user?.Xuid) {
+                const storageKey = `titleHistory_${user.Xuid}`;
+                const lastFetchKey = `titleHistory_lastFetch_${user.Xuid}`;
+                const titleHistoryStr = localStorage.getItem(storageKey);
+                if (titleHistoryStr) {
+                    try {
+                        const titleHistory = JSON.parse(titleHistoryStr);
+                        if (Array.isArray(titleHistory.titles)) {
+                            jogos = titleHistory.titles.slice(0, 10);
+                        }
+                    } catch { }
+                }
+                const lastFetchStr = localStorage.getItem(lastFetchKey);
                 if (lastFetchStr) {
                     const date = new Date(Number(lastFetchStr));
                     const horas = date.getHours().toString().padStart(2, '0');
@@ -87,24 +133,14 @@ export const JogosHomeSection: React.FC = () => {
                     horario = `${horas}:${minutos}`;
                 }
             }
-        } catch { }
-        return { jogos, horario };
-    };
-
-    // Atualiza ao montar e ao receber evento customizado
-    useEffect(() => {
-        const atualizar = () => {
-            const { jogos, horario } = carregarUltimosJogosJogadosEHorario();
-            setUltimosJogosJogados(jogos);
-            setHorarioUltimaAtualizacao(horario);
+            if (!cancelado) {
+                setUltimosJogosJogados(jogos);
+                setHorarioUltimaAtualizacao(horario ? 'Atualizado às ' + horario : null);
+            }
+            // Depois faz a atualização (background)
+            await carregarUltimosJogosJogadosEHorario();
         };
         atualizar();
-
-        // Evento customizado para atualização imediata
-        const onTitleHistoryUpdated = () => {
-            atualizar();
-        };
-        window.addEventListener('titleHistoryUpdated', onTitleHistoryUpdated);
 
         // Listener para mudanças em outras abas
         const onStorage = (e: StorageEvent) => {
@@ -115,7 +151,7 @@ export const JogosHomeSection: React.FC = () => {
         window.addEventListener('storage', onStorage);
 
         return () => {
-            window.removeEventListener('titleHistoryUpdated', onTitleHistoryUpdated);
+            cancelado = true;
             window.removeEventListener('storage', onStorage);
         };
     }, []);
@@ -167,8 +203,8 @@ export const JogosHomeSection: React.FC = () => {
                     })}
                     defaultExpanded={true}
                     isMobile={isMobile}
-                    loading={false}
-                    horarioAtualizacao={horarioUltimaAtualizacao || undefined}
+                    loading={isLoadingXbox}
+                    labelInfo={horarioUltimaAtualizacao || undefined}
                 />
 
                 <CustomCardRows
