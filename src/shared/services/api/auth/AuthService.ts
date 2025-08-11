@@ -102,10 +102,28 @@ const loginWithSupabaseUser = async (user: any): Promise<IUsuario | Error> => {
     }
 };
 
+const getGamertag = async (gamertag: string) => {
+    const proxyUrl = "https://corsproxy.io/?";
+    const targetUrl = `https://xbl.io/api/v2/search/${gamertag}`;
+
+    const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
+        headers: {
+            'X-Authorization': '5fad7ab3-efac-409c-95ec-978b4a2ecf2a',
+            'Accept': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error('Erro ao buscar gamertag');
+    }
+
+    return response.json();
+};
 
 export const AuthService = {
     auth,
     updateById,
     getById,
     loginWithSupabaseUser,
+    getGamertag,
 };

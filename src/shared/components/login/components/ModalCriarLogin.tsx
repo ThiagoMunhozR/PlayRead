@@ -27,6 +27,8 @@ export const ModalCriarLogin: React.FC<ModalCriarLoginProps> = ({ open, onClose,
             email: '',
             senha: '',
             confirmarSenha: '',
+            xuid: null,
+            fotoURL: null
         },
     });
 
@@ -55,7 +57,7 @@ export const ModalCriarLogin: React.FC<ModalCriarLoginProps> = ({ open, onClose,
             if (error) throw error;
             const { error: insertError } = await supabase
                 .from('usuarios')
-                .insert([{ Email: data.email, Nome: data.nome, Gamertag: data.gamertag }])
+                .insert([{ Email: data.email, Nome: data.nome, Gamertag: data.gamertag, Xuid: data.xuid }])
                 .single();
             if (insertError) throw insertError;
             setIsLoading(false);

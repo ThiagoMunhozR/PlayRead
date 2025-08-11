@@ -184,29 +184,31 @@ export const JogosHomeSection: React.FC = () => {
                     >Novo</Button>
                 </Box>
 
-                <CustomCardRows
-                    title="Últimos jogos jogados:"
-                    items={ultimosJogosJogados.map((jogo) => {
-                        // Procura o jogo correspondente no gamesList pelo nome
-                        const jogoLocal = gamesList.find(g => (g.nome === jogo.name) || (g.titleId === jogo.titleId));
-                        return {
-                            id: jogo.titleId || jogo.name,
-                            imageSrc:
-                                imagensJogos[jogo.name]
-                                || jogo.displayImage
-                                || '/imagens/loading.gif',
-                            title: jogo.name,
-                            titleId: jogo.titleId,
-                            subtitle: jogoLocal?.data,
-                            rating: jogoLocal?.avaliacao,
-                            showTrophy: !!jogoLocal?.dataCompleto,
-                        };
-                    })}
-                    defaultExpanded={true}
-                    isMobile={isMobile}
-                    loading={isLoadingXbox}
-                    labelInfo={horarioUltimaAtualizacao || undefined}
-                />
+                {user?.Xuid && (
+                    <CustomCardRows
+                        title="Últimos jogos jogados:"
+                        items={ultimosJogosJogados.map((jogo) => {
+                            // Procura o jogo correspondente no gamesList pelo nome
+                            const jogoLocal = gamesList.find(g => (g.nome === jogo.name) || (g.titleId === jogo.titleId));
+                            return {
+                                id: jogo.titleId || jogo.name,
+                                imageSrc:
+                                    imagensJogos[jogo.name]
+                                    || jogo.displayImage
+                                    || '/imagens/loading.gif',
+                                title: jogo.name,
+                                titleId: jogo.titleId,
+                                subtitle: jogoLocal?.data,
+                                rating: jogoLocal?.avaliacao,
+                                showTrophy: !!jogoLocal?.dataCompleto,
+                            };
+                        })}
+                        defaultExpanded={true}
+                        isMobile={isMobile}
+                        loading={isLoadingXbox}
+                        labelInfo={horarioUltimaAtualizacao || undefined}
+                    />
+                )}
 
                 <CustomCardRows
                     title="Últimos jogos zerados:"

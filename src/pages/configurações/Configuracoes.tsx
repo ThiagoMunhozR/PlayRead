@@ -13,6 +13,8 @@ import { supabase } from '../../shared/services/api/axios-config';
 type FormData = {
   nome: string;
   gamertag: string;
+  xuid: string | null;
+  fotoURL: string | null;
   email: string;
   senha: string;
   confirmarSenha: string;
@@ -36,6 +38,8 @@ export const Configuracoes: React.FC = () => {
     defaultValues: {
       nome: '',
       gamertag: '',
+      xuid: null,
+      fotoURL: null,
     },
   });
 
@@ -44,6 +48,8 @@ export const Configuracoes: React.FC = () => {
       setValue('nome', user.Nome || '');
       setValue('gamertag', user.Gamertag || '');
       setValue('email', user.Email || '');
+      setValue('xuid', user.Xuid || null);
+      setValue('fotoURL', user.FotoURL || null);
       setValue('senha', ''); // Senha não é carregada por segurança
     }
     setIsLoading(false);
@@ -65,6 +71,8 @@ export const Configuracoes: React.FC = () => {
         const payload = {
           Nome: formData.nome,
           Gamertag: formData.gamertag,
+          Xuid: formData.xuid,
+          FotoURL: formData.fotoURL,
         };
 
         AuthService.updateById(user.CodigoUsuario, payload).then((result) => {
@@ -76,7 +84,7 @@ export const Configuracoes: React.FC = () => {
             if (setUser) setUser(updatedUser);
             showAlert('Configurações alteradas com sucesso!', 'success');
             if (ClicouEmFechar) {
-              navigate('/biblioteca-jogos');
+              navigate('/pagina-inicial');
               setClicouEmFechar(false);
             }
           }
@@ -122,7 +130,7 @@ export const Configuracoes: React.FC = () => {
             errors={errors}
             isLoading={isLoading}
             isMobile={isMobile}
-            fotoURL={user.FotoURL}
+            fotoURL={user.FotoURL || undefined}
           />
         )}
       </form>

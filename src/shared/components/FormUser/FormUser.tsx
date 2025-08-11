@@ -5,6 +5,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { Controller, Control, FieldErrors } from 'react-hook-form';
 import React, { useState, useRef } from 'react';
+import { CampoGamertag } from './components/CampoGamertag';
 
 export type FormUserData = {
   nome: string;
@@ -12,7 +13,8 @@ export type FormUserData = {
   email: string;
   senha: string;
   confirmarSenha: string;
-  fotoURL?: string;
+  xuid: string | null;
+  fotoURL: string | null;
 };
 
 interface FormUserProps {
@@ -30,6 +32,7 @@ export const FormUser: React.FC<FormUserProps> = ({ control, errors, isLoading =
   const theme = useTheme();
   const [showSenha, setShowSenha] = useState(false);
   const senhaInputRef = useRef<HTMLInputElement>(null);
+  const [foto, setFoto] = useState<string | undefined>(fotoURL);
 
   const avatarBox = (foto?: string) => (
     <Grid item xs={12} sm={4.5} md={4.5} lg={2.5} xl={2.5}>
@@ -137,7 +140,7 @@ export const FormUser: React.FC<FormUserProps> = ({ control, errors, isLoading =
   return (
     <Box margin={1} display="flex" flexDirection="column" component={Paper} variant="outlined">
       <Grid container spacing={0.1} alignItems="flex-start" padding={2}>
-        {isMobile && avatarBox(fotoURL)}
+        {isMobile && avatarBox(foto)}
         <Grid item xs={12} sm={4} md={4} lg={4} xl={4}>
           <Grid container direction="column" padding={2} spacing={2}>
             {isLoading && (
@@ -170,11 +173,17 @@ export const FormUser: React.FC<FormUserProps> = ({ control, errors, isLoading =
                   name="gamertag"
                   control={control}
                   render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Gamertag"
+                    <CampoGamertag
+                      value={field.value}
                       disabled={isLoading}
-                      fullWidth
+                      error={!!errors.gamertag}
+                      helperText={errors.gamertag?.message}
+                      onChange={(_modernGamertag, xuid, displayPicRaw,) => {
+                        field.onChange(_modernGamertag);
+                        control._formValues.xuid = xuid ?? null;
+                        control._formValues.fotoURL = displayPicRaw || fotoURL;
+                        setFoto(displayPicRaw || fotoURL);
+                      }}
                     />
                   )}
                 />
@@ -201,28 +210,28 @@ export const FormUser: React.FC<FormUserProps> = ({ control, errors, isLoading =
               </Grid>
             </Grid>
             <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
-                <Controller
-                  name="senha"
-                  control={control}
-                  rules={(!editUser || trocaSenha) ? { required: 'A senha é obrigatória' } : {}}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Senha"
-                      type={showSenha ? 'text' : 'password'}
-                      error={!!errors.senha && (!editUser || trocaSenha)}
-                      helperText={(!editUser || trocaSenha) ? errors.senha?.message : ''}
-                      disabled={!trocaSenha || isLoading}
-                      fullWidth
-                      InputProps={{ ...senhaInputProps, disableUnderline: false }}
-                      InputLabelProps={{ shrink: true }}
-                      autoComplete="new-password"
-                    />
-                  )}
-                />
+              <Controller
+                name="senha"
+                control={control}
+                rules={(!editUser || trocaSenha) ? { required: 'A senha é obrigatória' } : {}}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Senha"
+                    type={showSenha ? 'text' : 'password'}
+                    error={!!errors.senha && (!editUser || trocaSenha)}
+                    helperText={(!editUser || trocaSenha) ? errors.senha?.message : ''}
+                    disabled={!trocaSenha || isLoading}
+                    fullWidth
+                    InputProps={{ ...senhaInputProps, disableUnderline: false }}
+                    InputLabelProps={{ shrink: true }}
+                    autoComplete="new-password"
+                  />
+                )}
+              />
             </Grid>
 
-            {(!editUser || trocaSenha)  && (
+            {(!editUser || trocaSenha) && (
               <Grid item xs={12} sm={12} md={12} lg={12} xl={12}>
                 <Controller
                   name="confirmarSenha"
@@ -242,11 +251,11 @@ export const FormUser: React.FC<FormUserProps> = ({ control, errors, isLoading =
                     />
                   )}
                 />
-            </Grid>
+              </Grid>
             )}
           </Grid>
         </Grid>
-        {!isMobile && avatarBox(fotoURL)}
+        {!isMobile && avatarBox(foto)}
       </Grid>
     </Box>
   );

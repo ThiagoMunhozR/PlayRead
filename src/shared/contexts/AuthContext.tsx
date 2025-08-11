@@ -16,11 +16,11 @@ interface IAuthContextData {
 // Definindo a interface do usuário, com base nos dados retornados pelo Supabase
 interface IUsuario {
   CodigoUsuario: number;
-  Gamertag: string;
-  FotoURL: string;
+  Gamertag: string | null;
+  FotoURL: string | null;
   Nome: string;
   Email: string;
-  Xuid: string;
+  Xuid: string | null;
 }
 
 const AuthContext = createContext({} as IAuthContextData);
