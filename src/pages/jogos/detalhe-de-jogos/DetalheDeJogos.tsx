@@ -1,7 +1,7 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Box, Grid, LinearProgress, Paper, TextField } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useForm, Controller, useWatch, set } from 'react-hook-form';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 
 import { CustomCard, FerramentasDeDetalhe } from '../../../shared/components';
 import { RatingBox } from '../../../shared/components/RatingBox/RatingBox';
