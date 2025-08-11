@@ -35,7 +35,7 @@ export const MenuLateral: React.FC<IMenuLateralProps> = ({ children }) => {
             >
               <Avatar
                 sx={{ height: theme.spacing(12), width: theme.spacing(12) }}
-                src={user.FotoURL}
+                src={user.FotoURL || undefined}
               />
               <Box mt={1}>
                 <Typography variant="h6" align="center">
