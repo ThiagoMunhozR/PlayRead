@@ -46,7 +46,9 @@ export const JogosHomeSection: React.FC = () => {
             .filter((jogo, index, arr) => arr.findIndex(j => j.id === jogo.id) === index);
         if (jogosParaImagens.length > 0) {
             carregarImagensItens(jogosParaImagens, 'jogos', JogosService.buscarCapaDoJogo)
-                .then(setImagensJogos);
+                .then(imagens => {
+                    setImagensJogos(prev => ({ ...prev, ...imagens }));
+                });
         }
     }, [ultimosZerados, melhoresAvaliados]);
 
@@ -208,7 +210,6 @@ export const JogosHomeSection: React.FC = () => {
                                 id: jogo.titleId || jogo.name,
                                 imageSrc:
                                     imagensJogos[jogo.name]
-                                    || jogo.displayImage
                                     || '/imagens/loading.gif',
                                 title: jogo.name,
                                 titleId: jogo.titleId,
