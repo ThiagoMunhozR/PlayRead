@@ -6,7 +6,11 @@
 export function removerCaracteresEspeciais(nomeArquivo: string) {
   return nomeArquivo
     .replace(/:/g, '')
-    .replace(/[/*?"<>|]/g, '');
+    .replace(/[/*?"<>|]/g, '')
+    .replace(/[®]/g, '')
+    .replace(/[™]/g, '')
+    .replace(/[’]/g, "'")
+    .trim();
 }
 
 /**
@@ -39,8 +43,7 @@ export async function verificarCapaDoItem(
               if (!found && titleId) {
                 found = titleHistory.titles.find((t: any) => t.titleId === titleId);
               }
-              if (found && found.displayImage) {
-                console.log('Capa encontrada no titleHistory:', found.displayImage);
+              if (found?.displayImage) {
                 displayImage = found.displayImage;
               }
             }
@@ -50,8 +53,13 @@ export async function verificarCapaDoItem(
         // ignora erro de parse/localStorage
       }
       if (displayImage) {
-        resolve(displayImage);
-        return;
+        if (displayImage.startsWith('http://')) {
+          // Não usar imagem http, tenta buscarCapa normalmente
+        } else {
+          console.log('Capa encontrada no titleHistory:', displayImage);
+          resolve(displayImage);
+          return;
+        }
       }
       try {
         const imageUrl = await buscarCapa(nome);

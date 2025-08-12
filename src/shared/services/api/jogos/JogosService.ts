@@ -128,7 +128,7 @@ const buscarCapaDoJogo = async (nomeJogo: string): Promise<string> => {
       const data = await response.json();
 
       if (data.items && data.items.length > 0) {
-
+        // 1. Tenta imagens retrato (height > width)
         for (const item of data.items) {
           try {
             if (item.image.height > item.image.width) {
@@ -138,11 +138,36 @@ const buscarCapaDoJogo = async (nomeJogo: string): Promise<string> => {
               return compressedImage;
             }
           } catch (error) {
-            console.error('Erro ao processar a imagem:', error);
+            console.error('Erro ao processar a imagem (retrato):', error);
           }
         }
-
-        throw new Error('Nenhuma imagem retrato encontrada ou erro ao processar todas as imagens');
+        // 2. Tenta imagens quase quadradas (width/height entre 0.8 e 1.0)
+        for (const item of data.items) {
+          try {
+            const w = item.image.width;
+            const h = item.image.height;
+            if (w && h && w / h >= 0.8 && w / h <= 1.0) {
+              const imageUrl = item.link;
+              const compressedImage = await compressImage(imageUrl);
+              localStorage.setItem(imageKey, compressedImage);
+              return compressedImage;
+            }
+          } catch (error) {
+            console.error('Erro ao processar a imagem (quase quadrada):', error);
+          }
+        }
+        // 3. Tenta todas as imagens (sem filtro)
+        for (const item of data.items) {
+          try {
+            const imageUrl = item.link;
+            const compressedImage = await compressImage(imageUrl);
+            localStorage.setItem(imageKey, compressedImage);
+            return compressedImage;
+          } catch (error) {
+            console.error('Erro ao processar a imagem (qualquer):', error);
+          }
+        }
+        throw new Error('Nenhuma imagem pôde ser processada');
       } else {
         throw new Error('Nenhuma imagem encontrada');
       }

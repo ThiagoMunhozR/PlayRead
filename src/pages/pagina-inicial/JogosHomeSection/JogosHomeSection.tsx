@@ -63,6 +63,20 @@ export const JogosHomeSection: React.FC = () => {
     const [horarioUltimaAtualizacao, setHorarioUltimaAtualizacao] = useState<string | null>(null);
     const [isLoadingXbox, setIsLoadingXbox] = useState(false);
 
+    useEffect(() => {
+        if (ultimosJogosJogados.length > 0) {
+            // Mapeia para o formato esperado por carregarImagensItens
+            const jogosParaImagens = ultimosJogosJogados.map(jogo => ({
+                nome: jogo.name,
+                titleId: jogo.titleId
+            }));
+            carregarImagensItens(jogosParaImagens, 'jogos', JogosService.buscarCapaDoJogo)
+                .then(imagens => {
+                    setImagensJogos(prev => ({ ...prev, ...imagens }));
+                });
+        }
+    }, [ultimosJogosJogados]);
+
     // Função para ler do localStorage e horário, e buscar do Xbox se necessário
     const carregarUltimosJogosJogadosEHorario = async () => {
         let jogos: any[] = [];
@@ -194,7 +208,6 @@ export const JogosHomeSection: React.FC = () => {
                                 id: jogo.titleId || jogo.name,
                                 imageSrc:
                                     imagensJogos[jogo.name]
-                                    || jogo.displayImage
                                     || '/imagens/loading.gif',
                                 title: jogo.name,
                                 titleId: jogo.titleId,
