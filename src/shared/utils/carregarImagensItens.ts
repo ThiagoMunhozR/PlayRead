@@ -53,27 +53,8 @@ export async function verificarCapaDoItem(
         // ignora erro de parse/localStorage
       }
       if (displayImage) {
-        // Tenta carregar a imagem, se der erro (CORS ou outro), chama buscarCapa
-        const testImg = new Image();
-        testImg.crossOrigin = 'Anonymous';
-        testImg.onload = () => {
-          resolve(displayImage);
-        };
-        testImg.onerror = async () => {
-          try {
-            const imageUrl = await buscarCapa(nome);
-            // Se buscarCapa retornar a mesma imagem que já falhou, retorna defaultImagePath para evitar looping
-            if (imageUrl === displayImage) {
-              resolve(defaultImagePath);
-            } else {
-              resolve(imageUrl);
-            }
-          } catch {
-            resolve(defaultImagePath);
-          }
-        };
-        testImg.src = displayImage;
         console.log('Capa encontrada no titleHistory:', displayImage);
+        resolve(displayImage);
         return;
       }
       try {
