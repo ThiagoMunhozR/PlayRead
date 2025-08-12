@@ -208,6 +208,7 @@ export const JogosHomeSection: React.FC = () => {
                                 id: jogo.titleId || jogo.name,
                                 imageSrc:
                                     imagensJogos[jogo.name]
+                                    || jogo.displayImage
                                     || '/imagens/loading.gif',
                                 title: jogo.name,
                                 titleId: jogo.titleId,
