@@ -109,7 +109,7 @@ export const CustomCard: React.FC<CustomCardProps> = ({
   const highlightStyles = active
     ? {
       boxShadow: '0 0 24px 0 rgba(255, 215, 0, 0.35)',
-      border: showTrophy ? '3px solid #FFD700' : '2px solid #1976d2',
+      border: showTrophy ? '3px solid #FFD700' : '2px solid #43a047',
       transition: 'box-shadow 0.3s, border 0.3s',
     }
     : {};

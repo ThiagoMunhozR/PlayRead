@@ -122,6 +122,7 @@ export const DetalheDeJogos: React.FC = () => {
           setValue('nome', result.nome || '');
           setValue('dataCompleto', DataCompletaFormatada || '');
           setValue('avaliacao', result.avaliacao ?? 0);
+          setTitleIdSelecionado(result.titleId || null);
         }
       });
     }

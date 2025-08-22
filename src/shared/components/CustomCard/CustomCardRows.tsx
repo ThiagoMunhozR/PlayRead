@@ -100,7 +100,7 @@ export const CustomCardRows: React.FC<CustomCardRowsProps> = ({
                                             subtitle={item.subtitle}
                                             rating={item.rating}
                                             showTrophy={item.showTrophy}
-                                            // idEditing={typeof item.id === 'number' ? item.id : undefined}
+                                            idEditing={typeof item.id === 'number' ? item.id : undefined}
                                             onDeleted={onDeleted}
                                         />
                                     </Grid>

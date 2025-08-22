@@ -19,7 +19,7 @@ interface IAppThemeProviderProps {
 }
 export const AppThemeProvider: React.FC<IAppThemeProviderProps> = ({ children }) => {
     const savedTheme = localStorage.getItem('themeName') as 'light' | 'dark' | null;
-    const [themeName, setThemeName] = useState<'light' | 'dark'>(savedTheme || 'light');
+    const [themeName, setThemeName] = useState<'light' | 'dark'>(savedTheme || 'dark');
     const [isMobile, setIsMobile] = useState(true);
 
     useEffect(() => {
