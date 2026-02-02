@@ -217,7 +217,7 @@ const compressImage = (imageUrl: string): Promise<string> => {
 
 const getTitleHistoryByXuid = async (xuid: string) => {
   // URL do proxy + encode da URL original
-  const proxyUrl = "https://corsproxy.io/?";
+  const proxyUrl = "https://corsproxy.io/?url=";
   const targetUrl = `https://xbl.io/api/v2/player/titleHistory/${xuid}`;
 
   const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
