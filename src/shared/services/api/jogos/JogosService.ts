@@ -216,45 +216,25 @@ const compressImage = (imageUrl: string): Promise<string> => {
 };
 
 const getTitleHistoryByXuid = async (xuid: string) => {
-  // Tenta primeiro sem o header X-Authorization (alguns proxies bloqueiam headers customizados)
-  const proxyUrl = "https://corsproxy.io/?url=";
+  // Usando corsproxy.io com Header Overrides para passar X-Authorization
+  const baseProxyUrl = "https://corsproxy.io/?url=";
   const targetUrl = `https://xbl.io/api/v2/player/titleHistory/${xuid}`;
+  const authHeader = encodeURIComponent('x-authorization:5fad7ab3-efac-409c-95ec-978b4a2ecf2a');
 
-  try {
-    console.log('Tentando sem header X-Authorization...');
-    const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
-      headers: {
-        'Accept': 'application/json',
-      },
-    });
+  // Monta URL com header override via query parameter
+  const finalUrl = `${baseProxyUrl}${encodeURIComponent(targetUrl)}&reqHeaders=${authHeader}`;
 
-    if (response.ok) {
-      return response.json();
-    }
+  const response = await fetch(finalUrl, {
+    headers: {
+      'Accept': 'application/json',
+    },
+  });
 
-    console.warn('Primeira tentativa falhou, status:', response.status);
-  } catch (error) {
-    console.warn('Erro na primeira tentativa:', error);
+  if (!response.ok) {
+    throw new Error('Erro ao buscar histórico de títulos');
   }
 
-  // Se falhou, tenta com o header (pode funcionar em localhost mas não no Vercel)
-  try {
-    console.log('Tentando com header X-Authorization...');
-    const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
-      headers: {
-        'X-Authorization': '5fad7ab3-efac-409c-95ec-978b4a2ecf2a',
-        'Accept': 'application/json',
-      },
-    });
-
-    if (response.ok) {
-      return response.json();
-    }
-  } catch (error) {
-    console.error('Ambas as tentativas falharam:', error);
-  }
-
-  throw new Error('Erro ao buscar histórico de títulos - proxy CORS bloqueado');
+  return response.json();
 };
 
 
