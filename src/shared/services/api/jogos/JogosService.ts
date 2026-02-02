@@ -216,24 +216,27 @@ const compressImage = (imageUrl: string): Promise<string> => {
 };
 
 const getTitleHistoryByXuid = async (xuid: string) => {
-  // Usando corsproxy.io com Header Overrides para passar X-Authorization
-  const baseProxyUrl = "https://corsproxy.io/?url=";
+  // Usando proxy.cors.sh (antigo cors.bridged.cc) - URL correta conforme documentação
+  const proxyUrl = "https://proxy.cors.sh/";
   const targetUrl = `https://xbl.io/api/v2/player/titleHistory/${xuid}`;
-  const authHeader = encodeURIComponent('x-authorization:5fad7ab3-efac-409c-95ec-978b4a2ecf2a');
 
-  // Monta URL com header override via query parameter
-  const finalUrl = `${baseProxyUrl}${encodeURIComponent(targetUrl)}&reqHeaders=${authHeader}`;
+  console.log('🔗 Fazendo requisição via proxy.cors.sh:', proxyUrl + targetUrl);
 
-  const response = await fetch(finalUrl, {
+  const response = await fetch(proxyUrl + targetUrl, {
     headers: {
+      'X-Authorization': '5fad7ab3-efac-409c-95ec-978b4a2ecf2a',
       'Accept': 'application/json',
+      'Origin': 'https://playread.vercel.app', // Obrigatório pelo proxy
+      'x-requested-with': 'XMLHttpRequest', // Header alternativo obrigatório
     },
   });
 
   if (!response.ok) {
+    console.error('❌ Proxy falhou:', response.status, response.statusText);
     throw new Error('Erro ao buscar histórico de títulos');
   }
 
+  console.log('✅ Sucesso com proxy.cors.sh!');
   return response.json();
 };
 
