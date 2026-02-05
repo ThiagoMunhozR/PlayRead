@@ -216,28 +216,24 @@ const compressImage = (imageUrl: string): Promise<string> => {
 };
 
 const getTitleHistoryByXuid = async (xuid: string) => {
-  // Usando proxy.cors.sh (antigo cors.bridged.cc) - URL correta conforme documentação
-  const proxyUrl = "https://proxy.cors.sh/";
-  const targetUrl = `https://xbl.io/api/v2/player/titleHistory/${xuid}`;
+  console.log('🎮 Buscando histórico Xbox via OpenXBL oficial...');
 
-  console.log('🔗 Fazendo requisição via proxy.cors.sh:', proxyUrl + targetUrl);
-
-  const response = await fetch(proxyUrl + targetUrl, {
+  const response = await fetch(`https://xbl.io/api/v2/player/titleHistory/${xuid}`, {
     headers: {
       'X-Authorization': '5fad7ab3-efac-409c-95ec-978b4a2ecf2a',
       'Accept': 'application/json',
-      'Origin': 'https://playread.vercel.app', // Obrigatório pelo proxy
-      'x-requested-with': 'XMLHttpRequest', // Header alternativo obrigatório
-    },
+      'Accept-Language': 'pt-BR'
+    }
   });
 
   if (!response.ok) {
-    console.error('❌ Proxy falhou:', response.status, response.statusText);
-    throw new Error('Erro ao buscar histórico de títulos');
+    throw new Error(`Erro na Xbox Live API: ${response.status} ${response.statusText}`);
   }
 
-  console.log('✅ Sucesso com proxy.cors.sh!');
-  return response.json();
+  const data = await response.json();
+  console.log('✅ Dados recebidos via OpenXBL oficial!');
+
+  return data;
 };
 
 
