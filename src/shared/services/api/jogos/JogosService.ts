@@ -216,89 +216,31 @@ const compressImage = (imageUrl: string): Promise<string> => {
 };
 
 const getTitleHistoryByXuid = async (xuid: string) => {
-  console.log('🎮 Iniciando fluxo OpenXBL App...');
+  console.log('🎮 Buscando histórico Xbox via Edge Function...');
 
-  // Configuração da sua app OpenXBL
-  const PUBLIC_KEY = '3bce5459-e378-1e1c-f895-b9920abb535d';
-  const AUTH_URL = `https://xbl.io/app/auth/${PUBLIC_KEY}`;
-  const CLAIM_URL = 'https://xbl.io/app/claim';
-
-  // Verifica se há código de autorização na URL (usuário acabou de fazer login)
-  const urlParams = new URLSearchParams(window.location.search);
-  const authCode = urlParams.get('code');
-
-  let appKey = localStorage.getItem('xbox_app_key');
-
-  if (authCode && !appKey) {
-    console.log('🔑 Processando código de autorização...');
-
-    try {
-      // Claims request - obtém App Key do usuário
-      const claimResponse = await fetch(CLAIM_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          code: authCode,
-          app_key: PUBLIC_KEY
-        })
-      });
-
-      if (!claimResponse.ok) {
-        throw new Error(`Erro no claims: ${claimResponse.status} ${claimResponse.statusText}`);
+  try {
+    // Usa sua própria Edge Function (bypassa CORS)
+    const response = await fetch(`/api/xbox-proxy?xuid=${xuid}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
       }
+    });
 
-      const claimData = await claimResponse.json();
-      appKey = claimData.app_key || claimData.key;
-      if (appKey) {
-        localStorage.setItem('xbox_app_key', appKey);
-      }
-
-      // Remove código da URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-      console.log('✅ App Key obtido e salvo!');
-
-    } catch (error) {
-      console.error('❌ Erro no claims:', error);
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+      throw new Error(errorData.error || `Erro: ${response.status} ${response.statusText}`);
     }
+
+    const data = await response.json();
+    console.log('✅ Dados Xbox recebidos via Edge Function!');
+
+    return data;
+
+  } catch (error) {
+    console.error('❌ Erro Xbox Edge Function:', error);
+    throw error;
   }
-
-  // Se não tem App Key, redireciona para autenticação Microsoft
-  if (!appKey) {
-    console.log('🔄 Redirecionando para autenticação Xbox...');
-    window.location.href = AUTH_URL;
-    throw new Error('Redirecionando para autenticação Microsoft...');
-  }
-
-  // Faz requisição usando App Key + X-Contract
-  console.log('📡 Fazendo requisição com App Key...');
-
-  const response = await fetch(`https://xbl.io/api/v2/player/titleHistory/${xuid}`, {
-    headers: {
-      'X-Authorization': appKey,
-      'X-Contract': '100', // Obrigatório para App Keys
-      'Accept': 'application/json',
-      'Accept-Language': 'pt-BR'
-    }
-  });
-
-  if (!response.ok) {
-    if (response.status === 401) {
-      // App Key expirado, remove e força nova autenticação
-      localStorage.removeItem('xbox_app_key');
-      console.log('🔄 App Key expirado, iniciando nova autenticação...');
-      window.location.href = AUTH_URL;
-      throw new Error('App Key expirado. Redirecionando para nova autenticação...');
-    }
-    throw new Error(`Erro Xbox Live API: ${response.status} ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  console.log('✅ Dados recebidos via OpenXBL App!');
-
-  return data;
 };
 
 
