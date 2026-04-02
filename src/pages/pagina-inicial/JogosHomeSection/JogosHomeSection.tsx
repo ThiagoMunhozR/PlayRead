@@ -209,9 +209,7 @@ export const JogosHomeSection: React.FC = () => {
                             const jogoLocal = gamesList.find(g => (g.nome === jogo.name) || (g.titleId === jogo.titleId));
                             return {
                                 id: jogoLocal?.id || jogo.titleId || jogo.name,
-                                imageSrc:
-                                    imagensJogos[jogo.name]
-                                    || '/imagens/loading.gif',
+                                imageSrc: imagensJogos[jogo.name] || '/imagens/loading.gif',
                                 title: jogo.name,
                                 titleId: jogo.titleId,
                                 subtitle: jogoLocal?.data,
