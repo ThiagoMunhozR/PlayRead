@@ -31,8 +31,8 @@ export function CampoNomeJogo({ field, isLoading, error, helperText, onSelectNom
         const titleHistoryStr = localStorage.getItem(`titleHistory_${user.Xuid}`);
         if (titleHistoryStr) {
           const titleHistory = JSON.parse(titleHistoryStr);
-          if (Array.isArray(titleHistory.titles)) {
-            const titlesArr = titleHistory.titles as Array<{ name: string; titleId?: string }>;
+          if (titleHistory.content && Array.isArray(titleHistory.content.titles)) {
+            const titlesArr = titleHistory.content.titles as Array<{ name: string; titleId?: string }>;
             const nomes = titlesArr.map(t => ({ name: t.name, titleId: t.titleId || null })).filter(t => !!t.name);
             nomes.sort((a, b) => a.name.localeCompare(b.name));
             setOptions(nomes);

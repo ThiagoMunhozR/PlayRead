@@ -38,10 +38,10 @@ export async function verificarCapaDoItem(
           const titleHistoryStr = localStorage.getItem(`titleHistory_${user.Xuid}`);
           if (titleHistoryStr) {
             const titleHistory = JSON.parse(titleHistoryStr);
-            if (Array.isArray(titleHistory.titles)) {
-              let found = titleHistory.titles.find((t: any) => t.name?.toLowerCase() === nome.toLowerCase());
+            if (titleHistory.content && Array.isArray(titleHistory.content.titles)) {
+              let found = titleHistory.content.titles.find((t: any) => t.name?.toLowerCase() === nome.toLowerCase());
               if (!found && titleId) {
-                found = titleHistory.titles.find((t: any) => t.titleId === titleId);
+                found = titleHistory.content.titles.find((t: any) => t.titleId === titleId);
               }
               if (found?.displayImage) {
                 displayImage = found.displayImage;

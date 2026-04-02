@@ -103,14 +103,12 @@ const loginWithSupabaseUser = async (user: any): Promise<IUsuario | Error> => {
 };
 
 const getGamertag = async (gamertag: string) => {
-    const proxyUrl = "https://corsproxy.io/?";
-    const targetUrl = `https://xbl.io/api/v2/search/${gamertag}`;
-
-    const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
+    // Usa a Edge Function para buscar gamertag (bypassa CORS)
+    const response = await fetch(`/api/xbox-search-proxy?gamertag=${encodeURIComponent(gamertag)}`, {
+        method: 'GET',
         headers: {
-            'X-Authorization': '5fad7ab3-efac-409c-95ec-978b4a2ecf2a',
-            'Accept': 'application/json',
-        },
+            'Accept': 'application/json'
+        }
     });
 
     if (!response.ok) {
