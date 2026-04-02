@@ -25,8 +25,8 @@ export default async function handler(req, res) {
       return;
     }
     
-    // Faz requisição para OpenXBL (como Postman)
-    const response = await fetch(`https://xbl.io/api/v2/player/titleHistory/${xuid}`, {
+    // Faz requisição para OpenXBL API (URL correta)
+    const response = await fetch(`https://api.xbl.io/v2/titles/${xuid}`, {
       headers: {
         'X-Authorization': '5fad7ab3-efac-409c-95ec-978b4a2ecf2a',
         'Accept': 'application/json',

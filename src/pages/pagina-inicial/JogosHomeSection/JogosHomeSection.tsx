@@ -66,6 +66,7 @@ export const JogosHomeSection: React.FC = () => {
     const [isLoadingXbox, setIsLoadingXbox] = useState(false);
 
     useEffect(() => {
+        console.log('Ultimos jogos jogados:', ultimosJogosJogados);
         if (ultimosJogosJogados.length > 0) {
             // Mapeia para o formato esperado por carregarImagensItens
             const jogosParaImagens = ultimosJogosJogados.map(jogo => ({
@@ -104,8 +105,8 @@ export const JogosHomeSection: React.FC = () => {
                         localStorage.setItem(storageKey, JSON.stringify(titleHistory));
                         localStorage.setItem(lastFetchKey, now.toString());
                         // Atualiza a tela com os novos dados
-                        if (Array.isArray(titleHistory.titles)) {
-                            setUltimosJogosJogados(titleHistory.titles.slice(0, 10));
+                        if (titleHistory.content && Array.isArray(titleHistory.content.titles)) {
+                            setUltimosJogosJogados(titleHistory.content.titles.slice(0, 10));
                         }
                         const date = new Date(now);
                         const horas = date.getHours().toString().padStart(2, '0');
@@ -136,8 +137,8 @@ export const JogosHomeSection: React.FC = () => {
                 if (titleHistoryStr) {
                     try {
                         const titleHistory = JSON.parse(titleHistoryStr);
-                        if (Array.isArray(titleHistory.titles)) {
-                            jogos = titleHistory.titles.slice(0, 10);
+                        if (titleHistory.content && Array.isArray(titleHistory.content.titles)) {
+                            jogos = titleHistory.content.titles.slice(0, 10);
                         }
                     } catch { }
                 }
